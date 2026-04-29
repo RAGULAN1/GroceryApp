@@ -1,123 +1,68 @@
 import { useRouter } from "expo-router";
-import React from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-
-const products = [
-  {
-    id: 1,
-    name: "Fresh Tomatoes",
-    price: "₹40",
-    unit: "per kg",
-    emoji: "🍅",
-    bg: "#FFE5E5",
-    category: "Vegetables",
-  },
-  {
-    id: 2,
-    name: "Whole Milk",
-    price: "₹60",
-    unit: "per litre",
-    emoji: "🥛",
-    bg: "#FFF9E5",
-    category: "Dairy",
-  },
-  {
-    id: 3,
-    name: "Brown Bread",
-    price: "₹45",
-    unit: "per pack",
-    emoji: "🍞",
-    bg: "#FFE5CC",
-    category: "Bakery",
-  },
-  {
-    id: 4,
-    name: "Bananas",
-    price: "₹30",
-    unit: "per dozen",
-    emoji: "🍌",
-    bg: "#FFFBE5",
-    category: "Fruits",
-  },
-  {
-    id: 5,
-    name: "Spinach",
-    price: "₹25",
-    unit: "per bunch",
-    emoji: "🥬",
-    bg: "#E5FFE5",
-    category: "Vegetables",
-  },
-  {
-    id: 6,
-    name: "Eggs",
-    price: "₹80",
-    unit: "per dozen",
-    emoji: "🥚",
-    bg: "#FFF5E5",
-    category: "Dairy",
-  },
-  {
-    id: 7,
-    name: "Apples",
-    price: "₹120",
-    unit: "per kg",
-    emoji: "🍎",
-    bg: "#FFE5E5",
-    category: "Fruits",
-  },
-  {
-    id: 8,
-    name: "Orange Juice",
-    price: "₹90",
-    unit: "per litre",
-    emoji: "🍊",
-    bg: "#FFE5CC",
-    category: "Beverages",
-  },
-  {
-    id: 9,
-    name: "Potato Chips",
-    price: "₹35",
-    unit: "per pack",
-    emoji: "🍿",
-    bg: "#F5E5FF",
-    category: "Snacks",
-  },
-  {
-    id: 10,
-    name: "Carrots",
-    price: "₹30",
-    unit: "per kg",
-    emoji: "🥕",
-    bg: "#FFE5CC",
-    category: "Vegetables",
-  },
-];
+import { db } from "../firebaseConfig";
 
 const categories = [
   "All",
   "Fruits",
   "Vegetables",
   "Dairy",
-  "Bakery",
-  "Beverages",
-  "Snacks",
+  "Grains",
+  "Pulses",
+  "Oils",
+  "Spices",
 ];
 
 export default function ProductsScreen() {
-  const [selected, setSelected] = React.useState("All");
+  const [products, setProducts] = useState([]);
+  const [selected, setSelected] = useState("All");
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      console.log("Fetching from db:", db);
+      const querySnapshot = await getDocs(collection(db, "products"));
+      console.log("Query snapshot size:", querySnapshot.size);
+      const items = [];
+      querySnapshot.forEach((doc) => {
+        console.log("Doc:", doc.id, doc.data());
+        items.push({ id: doc.id, ...doc.data() });
+      });
+      setProducts(items);
+    } catch (error) {
+      console.log("Error fetching products:", error.message);
+    }
+    setLoading(false);
+  };
+
   const filtered =
     selected === "All"
       ? products
       : products.filter((p) => p.category === selected);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingBox}>
+        <ActivityIndicator size="large" color="#1A2E1A" />
+        <Text style={styles.loadingText}>Loading products...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -156,7 +101,7 @@ export default function ProductsScreen() {
           {filtered.map((item) => (
             <TouchableOpacity
               key={item.id}
-              style={[styles.card, { backgroundColor: item.bg }]}
+              style={styles.card}
               onPress={() =>
                 router.push({
                   pathname: "/(tabs)/product-detail",
@@ -164,13 +109,21 @@ export default function ProductsScreen() {
                 })
               }
             >
-              <Text style={styles.emoji}>{item.emoji}</Text>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.unit}>{item.unit}</Text>
-              <View style={styles.bottom}>
-                <Text style={styles.price}>{item.price}</Text>
-                <View style={styles.addBtn}>
-                  <Text style={styles.addText}>+</Text>
+              <Image
+                source={{ uri: item.image }}
+                style={styles.productImage}
+                resizeMode="cover"
+              />
+              <View style={styles.cardInfo}>
+                <Text style={styles.name} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                <Text style={styles.unit}>{item.unit}</Text>
+                <View style={styles.bottom}>
+                  <Text style={styles.price}>₹{item.price}</Text>
+                  <View style={styles.addBtn}>
+                    <Text style={styles.addText}>+</Text>
+                  </View>
                 </View>
               </View>
             </TouchableOpacity>
@@ -183,6 +136,8 @@ export default function ProductsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8F9FA", paddingTop: 50 },
+  loadingBox: { flex: 1, alignItems: "center", justifyContent: "center" },
+  loadingText: { fontSize: 14, color: "#888", marginTop: 12 },
   title: {
     fontSize: 24,
     fontWeight: "bold",
@@ -210,15 +165,23 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 100,
   },
-  card: { width: "47%", borderRadius: 16, padding: 14 },
-  emoji: { fontSize: 36, marginBottom: 8 },
+  card: {
+    width: "47%",
+    borderRadius: 16,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#eee",
+    overflow: "hidden",
+  },
+  productImage: { width: "100%", height: 140 },
+  cardInfo: { padding: 12 },
   name: { fontSize: 14, fontWeight: "600", color: "#1A2E1A" },
   unit: { fontSize: 11, color: "#888", marginTop: 2 },
   bottom: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 8,
   },
   price: { fontSize: 16, fontWeight: "bold", color: "#C4622D" },
   addBtn: {
