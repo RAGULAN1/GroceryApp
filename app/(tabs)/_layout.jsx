@@ -39,6 +39,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen name="product-detail" options={{ href: null }} />
+      <Tabs.Screen name="login" options={{ href: null }} />
     </Tabs>
   );
 }

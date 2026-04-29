@@ -1,11 +1,11 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useCart } from "../CartContext";
 
@@ -93,7 +93,6 @@ export default function ProductDetailScreen() {
         onPress={() => {
           addToCart({ id, name, price, unit, emoji, bg, category }, qty);
           alert(`${qty} x ${name} added to cart!`);
-          router.back();
         }}
       >
         <Text style={styles.cartBtnText}>

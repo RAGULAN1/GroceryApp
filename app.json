@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "GroceryApp",
-    "slug": "GroceryApp",
+    "name": "Kadai Veedhi",
+    "slug": "Kadai-Veedhi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "groceryapp",
+    "scheme": "kadai-veedhi",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

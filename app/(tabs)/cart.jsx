@@ -1,58 +1,16 @@
-import { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { useCart } from "../CartContext";
 
 export default function CartScreen() {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Fresh Tomatoes",
-      price: 40,
-      unit: "per kg",
-      emoji: "🍅",
-      qty: 2,
-    },
-    {
-      id: 2,
-      name: "Whole Milk",
-      price: 60,
-      unit: "per litre",
-      emoji: "🥛",
-      qty: 1,
-    },
-    {
-      id: 3,
-      name: "Brown Bread",
-      price: 45,
-      unit: "per pack",
-      emoji: "🍞",
-      qty: 1,
-    },
-  ]);
-
-  const updateQty = (id, change) => {
-    setCartItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? { ...item, qty: Math.max(0, item.qty + change) }
-            : item,
-        )
-        .filter((item) => item.qty > 0),
-    );
-  };
-
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.qty,
-    0,
-  );
-  const delivery = 40;
-  const total = subtotal + delivery;
+  const { cartItems, updateQty, cartTotal } = useCart();
+  const delivery = cartItems.length > 0 ? 40 : 0;
+  const total = cartTotal + delivery;
 
   return (
     <View style={styles.container}>
@@ -73,7 +31,9 @@ export default function CartScreen() {
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemName}>{item.name}</Text>
                   <Text style={styles.itemUnit}>{item.unit}</Text>
-                  <Text style={styles.itemPrice}>₹{item.price * item.qty}</Text>
+                  <Text style={styles.itemPrice}>
+                    ₹{parseInt(item.price?.replace("₹", "") || 0) * item.qty}
+                  </Text>
                 </View>
                 <View style={styles.qtyRow}>
                   <TouchableOpacity
@@ -93,12 +53,11 @@ export default function CartScreen() {
               </View>
             ))}
 
-            {/* Order Summary */}
             <View style={styles.summary}>
               <Text style={styles.summaryTitle}>Order Summary</Text>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>₹{subtotal}</Text>
+                <Text style={styles.summaryValue}>₹{cartTotal}</Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Delivery Fee</Text>
@@ -111,7 +70,6 @@ export default function CartScreen() {
             </View>
           </ScrollView>
 
-          {/* Checkout Button */}
           <TouchableOpacity style={styles.checkoutBtn}>
             <Text style={styles.checkoutText}>
               Proceed to Checkout → ₹{total}
