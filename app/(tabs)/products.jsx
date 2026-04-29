@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React from "react";
 import {
     ScrollView,
@@ -112,6 +113,7 @@ const categories = [
 
 export default function ProductsScreen() {
   const [selected, setSelected] = React.useState("All");
+  const router = useRouter();
   const filtered =
     selected === "All"
       ? products
@@ -155,6 +157,12 @@ export default function ProductsScreen() {
             <TouchableOpacity
               key={item.id}
               style={[styles.card, { backgroundColor: item.bg }]}
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/product-detail",
+                  params: item,
+                })
+              }
             >
               <Text style={styles.emoji}>{item.emoji}</Text>
               <Text style={styles.name}>{item.name}</Text>

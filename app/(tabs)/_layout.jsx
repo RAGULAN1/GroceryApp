@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { Text } from "react-native";
 
 export default function TabLayout() {
   return (
@@ -20,27 +21,24 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => <TabBarIcon label="🏠" color={color} />,
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🏠</Text>,
         }}
       />
       <Tabs.Screen
         name="products"
         options={{
           title: "Products",
-          tabBarIcon: ({ color }) => <TabBarIcon label="🛍️" color={color} />,
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🛍️</Text>,
         }}
       />
       <Tabs.Screen
         name="cart"
         options={{
           title: "Cart",
-          tabBarIcon: ({ color }) => <TabBarIcon label="🛒" color={color} />,
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🛒</Text>,
         }}
       />
+      <Tabs.Screen name="product-detail" options={{ href: null }} />
     </Tabs>
   );
-}
-
-function TabBarIcon({ label }) {
-  return <span style={{ fontSize: 22 }}>{label}</span>;
 }
