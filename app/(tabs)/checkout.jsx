@@ -1,17 +1,14 @@
 import { useRouter } from "expo-router";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useCart } from "../CartContext";
-import { db } from "../firebaseConfig";
 
 const slots = ["9 AM – 12 PM", "12 PM – 3 PM", "3 PM – 6 PM", "6 PM – 9 PM"];
 
@@ -28,44 +25,24 @@ export default function CheckoutScreen() {
   const delivery = 40;
   const total = cartTotal + delivery;
 
-  const placeOrder = async () => {
+  const placeOrder = () => {
     if (!name || !phone || !address || !pincode || !selectedSlot) {
-      Alert.alert(
-        "Missing Details",
-        "Please fill in all fields and select a delivery slot!",
-      );
+      alert("Please fill in all fields and select a delivery slot!");
       return;
     }
     if (phone.length !== 10) {
-      Alert.alert(
-        "Invalid Phone",
-        "Please enter a valid 10-digit phone number!",
-      );
+      alert("Please enter a valid 10-digit phone number!");
       return;
     }
     setLoading(true);
-    try {
-      await addDoc(collection(db, "orders"), {
-        items: cartItems,
-        total: total,
-        subtotal: cartTotal,
-        delivery: delivery,
-        address: { name, phone, address, pincode },
-        slot: selectedSlot,
-        status: "placed",
-        createdAt: serverTimestamp(),
-      });
+    setTimeout(() => {
       clearCart();
-      Alert.alert(
-        "🎉 Order Placed!",
-        `Your order of ₹${total} has been placed successfully! Expected delivery: ${selectedSlot}`,
-        [{ text: "OK", onPress: () => router.replace("/(tabs)") }],
+      setLoading(false);
+      alert(
+        `🎉 Order Placed Successfully!\n\nThank you ${name}!\nTotal: ₹${total}\nDelivery Slot: ${selectedSlot}\n\nYour groceries will be delivered soon!`,
       );
-    } catch (error) {
-      Alert.alert("Error", "Failed to place order. Please try again.");
-      console.log("Order error:", error);
-    }
-    setLoading(false);
+      router.replace("/(tabs)");
+    }, 1500);
   };
 
   return (
@@ -80,7 +57,6 @@ export default function CheckoutScreen() {
         {/* Delivery Address */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>📍 Delivery Address</Text>
-
           <Text style={styles.label}>Full Name</Text>
           <TextInput
             style={styles.input}
@@ -89,7 +65,6 @@ export default function CheckoutScreen() {
             onChangeText={setName}
             placeholderTextColor="#aaa"
           />
-
           <Text style={styles.label}>Phone Number</Text>
           <TextInput
             style={styles.input}
@@ -100,7 +75,6 @@ export default function CheckoutScreen() {
             maxLength={10}
             placeholderTextColor="#aaa"
           />
-
           <Text style={styles.label}>Address</Text>
           <TextInput
             style={[styles.input, styles.multiline]}
@@ -111,7 +85,6 @@ export default function CheckoutScreen() {
             numberOfLines={3}
             placeholderTextColor="#aaa"
           />
-
           <Text style={styles.label}>Pincode</Text>
           <TextInput
             style={styles.input}
@@ -177,11 +150,9 @@ export default function CheckoutScreen() {
             <Text style={styles.totalValue}>₹{total}</Text>
           </View>
         </View>
-
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Place Order Button */}
       <TouchableOpacity
         style={[styles.orderBtn, loading && styles.orderBtnDisabled]}
         onPress={placeOrder}

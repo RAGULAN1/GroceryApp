@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import {
   ScrollView,
   StyleSheet,
@@ -9,6 +10,7 @@ import { useCart } from "../CartContext";
 
 export default function CartScreen() {
   const { cartItems, updateQty, cartTotal } = useCart();
+  const router = useRouter();
   const delivery = cartItems.length > 0 ? 40 : 0;
   const total = cartTotal + delivery;
 
@@ -21,13 +23,19 @@ export default function CartScreen() {
           <Text style={styles.emptyEmoji}>🛒</Text>
           <Text style={styles.emptyText}>Your cart is empty!</Text>
           <Text style={styles.emptySub}>Add some groceries to get started</Text>
+          <TouchableOpacity
+            style={styles.shopBtn}
+            onPress={() => router.push("/(tabs)/products")}
+          >
+            <Text style={styles.shopBtnText}>Shop Now →</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <>
           <ScrollView showsVerticalScrollIndicator={false}>
             {cartItems.map((item) => (
               <View key={item.id} style={styles.cartItem}>
-                <Text style={styles.itemEmoji}>{item.emoji}</Text>
+                <Text style={styles.itemEmoji}>{item.emoji || "🛒"}</Text>
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemName}>{item.name}</Text>
                   <Text style={styles.itemUnit}>{item.unit}</Text>
@@ -68,9 +76,13 @@ export default function CartScreen() {
                 <Text style={styles.totalValue}>₹{total}</Text>
               </View>
             </View>
+            <View style={{ height: 100 }} />
           </ScrollView>
 
-          <TouchableOpacity style={styles.checkoutBtn}>
+          <TouchableOpacity
+            style={styles.checkoutBtn}
+            onPress={() => router.push("/(tabs)/checkout")}
+          >
             <Text style={styles.checkoutText}>
               Proceed to Checkout → ₹{total}
             </Text>
@@ -98,7 +110,14 @@ const styles = StyleSheet.create({
   },
   emptyEmoji: { fontSize: 64, marginBottom: 16 },
   emptyText: { fontSize: 20, fontWeight: "bold", color: "#1A2E1A" },
-  emptySub: { fontSize: 14, color: "#888", marginTop: 8 },
+  emptySub: { fontSize: 14, color: "#888", marginTop: 8, marginBottom: 20 },
+  shopBtn: {
+    backgroundColor: "#1A2E1A",
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  shopBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
   cartItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -142,7 +161,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 100,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: "#eee",
   },
