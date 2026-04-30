@@ -1,8 +1,6 @@
 import { useRouter } from "expo-router";
-import { collection, getDocs } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   ScrollView,
   StyleSheet,
@@ -10,7 +8,105 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { db } from "../firebaseConfig";
+
+const products = [
+  {
+    id: "1",
+    name: "Basmati Rice",
+    price: "120",
+    unit: "per kg",
+    category: "Grains",
+    image: "https://images.unsplash.com/photo-1536304993881-ff86e0c9b5c3?w=400",
+  },
+  {
+    id: "2",
+    name: "Toor Dal",
+    price: "90",
+    unit: "per kg",
+    category: "Pulses",
+    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
+  },
+  {
+    id: "3",
+    name: "Fresh Tomatoes",
+    price: "40",
+    unit: "per kg",
+    category: "Vegetables",
+    image: "https://images.unsplash.com/photo-1546470427-1ec4e1ba3bac?w=400",
+  },
+  {
+    id: "4",
+    name: "Onions",
+    price: "30",
+    unit: "per kg",
+    category: "Vegetables",
+    image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400",
+  },
+  {
+    id: "5",
+    name: "Coconut Oil",
+    price: "180",
+    unit: "per litre",
+    category: "Oils",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "6",
+    name: "Fresh Coriander",
+    price: "15",
+    unit: "per bunch",
+    category: "Vegetables",
+    image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400",
+  },
+  {
+    id: "7",
+    name: "Whole Milk",
+    price: "60",
+    unit: "per litre",
+    category: "Dairy",
+    image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
+  },
+  {
+    id: "8",
+    name: "Turmeric Powder",
+    price: "45",
+    unit: "per 100g",
+    category: "Spices",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "9",
+    name: "Bananas",
+    price: "30",
+    unit: "per dozen",
+    category: "Fruits",
+    image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400",
+  },
+  {
+    id: "10",
+    name: "Idli Rice",
+    price: "80",
+    unit: "per kg",
+    category: "Grains",
+    image: "https://images.unsplash.com/photo-1536304993881-ff86e0c9b5c3?w=400",
+  },
+  {
+    id: "11",
+    name: "Chana Dal",
+    price: "85",
+    unit: "per kg",
+    category: "Pulses",
+    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
+  },
+  {
+    id: "12",
+    name: "Fresh Spinach",
+    price: "20",
+    unit: "per bunch",
+    category: "Vegetables",
+    image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400",
+  },
+];
 
 const categories = [
   "All",
@@ -24,51 +120,18 @@ const categories = [
 ];
 
 export default function ProductsScreen() {
-  const [products, setProducts] = useState([]);
   const [selected, setSelected] = useState("All");
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      console.log("Fetching from db:", db);
-      const querySnapshot = await getDocs(collection(db, "products"));
-      console.log("Query snapshot size:", querySnapshot.size);
-      const items = [];
-      querySnapshot.forEach((doc) => {
-        console.log("Doc:", doc.id, doc.data());
-        items.push({ id: doc.id, ...doc.data() });
-      });
-      setProducts(items);
-    } catch (error) {
-      console.log("Error fetching products:", error.message);
-    }
-    setLoading(false);
-  };
 
   const filtered =
     selected === "All"
       ? products
       : products.filter((p) => p.category === selected);
 
-  if (loading) {
-    return (
-      <View style={styles.loadingBox}>
-        <ActivityIndicator size="large" color="#1A2E1A" />
-        <Text style={styles.loadingText}>Loading products...</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>All Products</Text>
 
-      {/* Category Filter */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -95,7 +158,6 @@ export default function ProductsScreen() {
         ))}
       </ScrollView>
 
-      {/* Products Grid */}
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.grid}>
           {filtered.map((item) => (
@@ -136,8 +198,6 @@ export default function ProductsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8F9FA", paddingTop: 50 },
-  loadingBox: { flex: 1, alignItems: "center", justifyContent: "center" },
-  loadingText: { fontSize: 14, color: "#888", marginTop: 12 },
   title: {
     fontSize: 24,
     fontWeight: "bold",
