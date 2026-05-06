@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GroceryApp",
-    "slug": "GroceryApp",
+    "name": "kadai-veedhi",
+    "slug": "kadai-veedhi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -50,14 +50,14 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "a41eafc0-c54f-4850-93b1-5ea3425e56af"
+        "projectId": "04d9bc57-15ad-42a1-9416-8caf02c91b6f"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/a41eafc0-c54f-4850-93b1-5ea3425e56af"
+      "url": "https://u.expo.dev/04d9bc57-15ad-42a1-9416-8caf02c91b6f"
     },
     "owner": "ragulan5859"
   }

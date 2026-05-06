@@ -14,8 +14,7 @@ import { db } from "./firebaseConfig";
 
 export default function Index() {
   const router = useRouter();
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,8 +24,6 @@ export default function Index() {
         setData(userData);
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchData();

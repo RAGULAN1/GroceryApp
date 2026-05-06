@@ -81,7 +81,7 @@ export default function CartScreen() {
 
           <TouchableOpacity
             style={styles.checkoutBtn}
-            onPress={() => router.push("/(tabs)/checkout")}
+            onPress={() => router.push("/checkout")}
           >
             <Text style={styles.checkoutText}>
               Proceed to Checkout → ₹{total}
