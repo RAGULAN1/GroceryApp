@@ -1,174 +1,1412 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useCart } from "../CartContext";
+
+const categories = [
+  "All",
+  "Dairy",
+  "Bakery",
+  "Grains",
+  "Dal & Pulses",
+  "Oils",
+  "Masala & Spices",
+  "Instant Foods",
+  "Soaps & Body Wash",
+  "Shampoo & Hair Care",
+  "Washing & Cleaning",
+  "Dental Care",
+  "Home Cleaning",
+  "Snacks",
+  "Beverages",
+];
 
 const products = [
+  // 🥛 Dairy
   {
-    id: "1",
-    name: "Basmati Rice",
-    price: "120",
-    unit: "per kg",
-    category: "Grains",
-    image: "https://images.unsplash.com/photo-1536304993881-ff86e0c9b5c3?w=400",
-  },
-  {
-    id: "2",
-    name: "Toor Dal",
-    price: "90",
-    unit: "per kg",
-    category: "Pulses",
-    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
-  },
-  {
-    id: "3",
-    name: "Fresh Tomatoes",
-    price: "40",
-    unit: "per kg",
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1546470427-1ec4e1ba3bac?w=400",
-  },
-  {
-    id: "4",
-    name: "Onions",
-    price: "30",
-    unit: "per kg",
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400",
-  },
-  {
-    id: "5",
-    name: "Coconut Oil",
-    price: "180",
-    unit: "per litre",
-    category: "Oils",
-    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
-  },
-  {
-    id: "6",
-    name: "Fresh Coriander",
-    price: "15",
-    unit: "per bunch",
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400",
-  },
-  {
-    id: "7",
+    id: "d1",
     name: "Whole Milk",
     price: "60",
     unit: "per litre",
     category: "Dairy",
+    emoji: "🥛",
     image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
   },
   {
-    id: "8",
-    name: "Turmeric Powder",
-    price: "45",
+    id: "d2",
+    name: "Curd",
+    price: "40",
+    unit: "per 500g",
+    category: "Dairy",
+    emoji: "🥣",
+    image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400",
+  },
+  {
+    id: "d3",
+    name: "Butter",
+    price: "55",
     unit: "per 100g",
-    category: "Spices",
-    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+    category: "Dairy",
+    emoji: "🧈",
+    image: "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400",
   },
   {
-    id: "9",
-    name: "Bananas",
+    id: "d4",
+    name: "Cheese",
+    price: "120",
+    unit: "per 200g",
+    category: "Dairy",
+    emoji: "🧀",
+    image: "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400",
+  },
+  {
+    id: "d5",
+    name: "Paneer",
+    price: "90",
+    unit: "per 200g",
+    category: "Dairy",
+    emoji: "🥛",
+    image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400",
+  },
+  {
+    id: "d6",
+    name: "Ghee",
+    price: "180",
+    unit: "per 500ml",
+    category: "Dairy",
+    emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1620706857370-e1b9770e8bb1?w=400",
+  },
+  {
+    id: "d7",
+    name: "Buttermilk",
+    price: "20",
+    unit: "per 500ml",
+    category: "Dairy",
+    emoji: "🥛",
+    image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
+  },
+  {
+    id: "d8",
+    name: "Cream",
+    price: "45",
+    unit: "per 200ml",
+    category: "Dairy",
+    emoji: "🥛",
+    image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
+  },
+  {
+    id: "d9",
+    name: "Condensed Milk",
+    price: "65",
+    unit: "per 400g",
+    category: "Dairy",
+    emoji: "🥛",
+    image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
+  },
+  {
+    id: "d10",
+    name: "Flavoured Milk",
     price: "30",
-    unit: "per dozen",
-    category: "Fruits",
-    image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400",
+    unit: "per 200ml",
+    category: "Dairy",
+    emoji: "🥛",
+    image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
+  },
+
+  // 🍞 Bakery
+  {
+    id: "b1",
+    name: "White Bread",
+    price: "35",
+    unit: "per pack",
+    category: "Bakery",
+    emoji: "🍞",
+    image: "https://images.unsplash.com/photo-1549931319-a545dcf3bc7c?w=400",
   },
   {
-    id: "10",
+    id: "b2",
+    name: "Brown Bread",
+    price: "45",
+    unit: "per pack",
+    category: "Bakery",
+    emoji: "🍞",
+    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400",
+  },
+  {
+    id: "b3",
+    name: "Buns",
+    price: "30",
+    unit: "per pack",
+    category: "Bakery",
+    emoji: "🥖",
+    image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400",
+  },
+  {
+    id: "b4",
+    name: "Cake",
+    price: "150",
+    unit: "per piece",
+    category: "Bakery",
+    emoji: "🎂",
+    image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400",
+  },
+  {
+    id: "b5",
+    name: "Biscuits",
+    price: "25",
+    unit: "per pack",
+    category: "Bakery",
+    emoji: "🍪",
+    image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400",
+  },
+  {
+    id: "b6",
+    name: "Rusk",
+    price: "30",
+    unit: "per pack",
+    category: "Bakery",
+    emoji: "🍞",
+    image: "https://images.unsplash.com/photo-1549931319-a545dcf3bc7c?w=400",
+  },
+  {
+    id: "b7",
+    name: "Pav",
+    price: "25",
+    unit: "per pack",
+    category: "Bakery",
+    emoji: "🥖",
+    image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400",
+  },
+  {
+    id: "b8",
+    name: "Croissant",
+    price: "60",
+    unit: "per piece",
+    category: "Bakery",
+    emoji: "🥐",
+    image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400",
+  },
+  {
+    id: "b9",
+    name: "Muffin",
+    price: "40",
+    unit: "per piece",
+    category: "Bakery",
+    emoji: "🧁",
+    image: "https://images.unsplash.com/photo-1587668178277-295251f900ce?w=400",
+  },
+  {
+    id: "b10",
+    name: "Cookies",
+    price: "80",
+    unit: "per pack",
+    category: "Bakery",
+    emoji: "🍪",
+    image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400",
+  },
+
+  // 🌾 Grains
+  {
+    id: "g1",
+    name: "Basmati Rice",
+    price: "120",
+    unit: "per kg",
+    category: "Grains",
+    emoji: "🌾",
+    image: "https://images.unsplash.com/photo-1536304993881-ff86e0c9b5c3?w=400",
+  },
+  {
+    id: "g2",
     name: "Idli Rice",
     price: "80",
     unit: "per kg",
     category: "Grains",
+    emoji: "🌾",
     image: "https://images.unsplash.com/photo-1536304993881-ff86e0c9b5c3?w=400",
   },
   {
-    id: "11",
-    name: "Chana Dal",
-    price: "85",
+    id: "g3",
+    name: "Wheat Flour",
+    price: "45",
     unit: "per kg",
-    category: "Pulses",
+    category: "Grains",
+    emoji: "🌾",
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+  },
+  {
+    id: "g4",
+    name: "Maida",
+    price: "40",
+    unit: "per kg",
+    category: "Grains",
+    emoji: "🌾",
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+  },
+  {
+    id: "g5",
+    name: "Rava",
+    price: "35",
+    unit: "per kg",
+    category: "Grains",
+    emoji: "🌾",
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+  },
+  {
+    id: "g6",
+    name: "Poha",
+    price: "50",
+    unit: "per kg",
+    category: "Grains",
+    emoji: "🌾",
+    image: "https://images.unsplash.com/photo-1536304993881-ff86e0c9b5c3?w=400",
+  },
+  {
+    id: "g7",
+    name: "Oats",
+    price: "90",
+    unit: "per 500g",
+    category: "Grains",
+    emoji: "🌾",
+    image: "https://images.unsplash.com/photo-1614961233913-a5113a4a34ed?w=400",
+  },
+  {
+    id: "g8",
+    name: "Cornflour",
+    price: "45",
+    unit: "per 500g",
+    category: "Grains",
+    emoji: "🌽",
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+  },
+  {
+    id: "g9",
+    name: "Besan",
+    price: "55",
+    unit: "per kg",
+    category: "Grains",
+    emoji: "🌾",
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+  },
+  {
+    id: "g10",
+    name: "Ragi Flour",
+    price: "60",
+    unit: "per kg",
+    category: "Grains",
+    emoji: "🌾",
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+  },
+
+  // 🫘 Dal & Pulses
+  {
+    id: "p1",
+    name: "Toor Dal",
+    price: "90",
+    unit: "per kg",
+    category: "Dal & Pulses",
+    emoji: "🫘",
     image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
   },
   {
-    id: "12",
-    name: "Fresh Spinach",
+    id: "p2",
+    name: "Chana Dal",
+    price: "85",
+    unit: "per kg",
+    category: "Dal & Pulses",
+    emoji: "🫘",
+    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
+  },
+  {
+    id: "p3",
+    name: "Moong Dal",
+    price: "95",
+    unit: "per kg",
+    category: "Dal & Pulses",
+    emoji: "🫘",
+    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
+  },
+  {
+    id: "p4",
+    name: "Urad Dal",
+    price: "100",
+    unit: "per kg",
+    category: "Dal & Pulses",
+    emoji: "🫘",
+    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
+  },
+  {
+    id: "p5",
+    name: "Masoor Dal",
+    price: "80",
+    unit: "per kg",
+    category: "Dal & Pulses",
+    emoji: "🫘",
+    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
+  },
+  {
+    id: "p6",
+    name: "Rajma",
+    price: "110",
+    unit: "per kg",
+    category: "Dal & Pulses",
+    emoji: "🫘",
+    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
+  },
+  {
+    id: "p7",
+    name: "Chole",
+    price: "90",
+    unit: "per kg",
+    category: "Dal & Pulses",
+    emoji: "🫘",
+    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
+  },
+  {
+    id: "p8",
+    name: "Green Peas",
+    price: "70",
+    unit: "per kg",
+    category: "Dal & Pulses",
+    emoji: "🫛",
+    image: "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400",
+  },
+  {
+    id: "p9",
+    name: "Peanuts",
+    price: "60",
+    unit: "per kg",
+    category: "Dal & Pulses",
+    emoji: "🥜",
+    image: "https://images.unsplash.com/photo-1567892737950-30c4db43e65b?w=400",
+  },
+  {
+    id: "p10",
+    name: "Soya Chunks",
+    price: "80",
+    unit: "per 500g",
+    category: "Dal & Pulses",
+    emoji: "🫘",
+    image: "https://images.unsplash.com/photo-1585996165357-98ea93d97e14?w=400",
+  },
+
+  // 🛢️ Oils
+  {
+    id: "o1",
+    name: "Coconut Oil",
+    price: "180",
+    unit: "per litre",
+    category: "Oils",
+    emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "o2",
+    name: "Sunflower Oil",
+    price: "140",
+    unit: "per litre",
+    category: "Oils",
+    emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "o3",
+    name: "Groundnut Oil",
+    price: "160",
+    unit: "per litre",
+    category: "Oils",
+    emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "o4",
+    name: "Olive Oil",
+    price: "350",
+    unit: "per 500ml",
+    category: "Oils",
+    emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "o5",
+    name: "Mustard Oil",
+    price: "130",
+    unit: "per litre",
+    category: "Oils",
+    emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "o6",
+    name: "Rice Bran Oil",
+    price: "150",
+    unit: "per litre",
+    category: "Oils",
+    emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "o7",
+    name: "Sesame Oil",
+    price: "200",
+    unit: "per 500ml",
+    category: "Oils",
+    emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "o8",
+    name: "Palm Oil",
+    price: "120",
+    unit: "per litre",
+    category: "Oils",
+    emoji: "🫙",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+
+  // 🌶️ Masala & Spices
+  {
+    id: "m1",
+    name: "Turmeric Powder",
+    price: "45",
+    unit: "per 100g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m2",
+    name: "Chilli Powder",
+    price: "55",
+    unit: "per 100g",
+    category: "Masala & Spices",
+    emoji: "🌶️",
+    image: "https://images.unsplash.com/photo-1588514912908-eca9b8a78c50?w=400",
+  },
+  {
+    id: "m3",
+    name: "Coriander Powder",
+    price: "40",
+    unit: "per 100g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m4",
+    name: "Cumin Seeds",
+    price: "60",
+    unit: "per 100g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m5",
+    name: "Pepper",
+    price: "80",
+    unit: "per 100g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m6",
+    name: "Cardamom",
+    price: "150",
+    unit: "per 50g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m7",
+    name: "Cloves",
+    price: "120",
+    unit: "per 50g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m8",
+    name: "Cinnamon",
+    price: "90",
+    unit: "per 50g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m9",
+    name: "Garam Masala",
+    price: "65",
+    unit: "per 100g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m10",
+    name: "Biryani Masala",
+    price: "70",
+    unit: "per 100g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m11",
+    name: "Sambar Powder",
+    price: "55",
+    unit: "per 100g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m12",
+    name: "Rasam Powder",
+    price: "50",
+    unit: "per 100g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+  {
+    id: "m13",
+    name: "Salt",
     price: "20",
-    unit: "per bunch",
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400",
+    unit: "per kg",
+    category: "Masala & Spices",
+    emoji: "🧂",
+    image: "https://images.unsplash.com/photo-1612500796791-cc8d6d86a6d9?w=400",
+  },
+  {
+    id: "m14",
+    name: "Sugar",
+    price: "45",
+    unit: "per kg",
+    category: "Masala & Spices",
+    emoji: "🍬",
+    image: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=400",
+  },
+  {
+    id: "m15",
+    name: "Tamarind",
+    price: "60",
+    unit: "per 250g",
+    category: "Masala & Spices",
+    emoji: "🌿",
+    image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400",
+  },
+
+  // 🍜 Instant Foods
+  {
+    id: "i1",
+    name: "Maggi Noodles",
+    price: "14",
+    unit: "per pack",
+    category: "Instant Foods",
+    emoji: "🍜",
+    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400",
+  },
+  {
+    id: "i2",
+    name: "Yippee Noodles",
+    price: "14",
+    unit: "per pack",
+    category: "Instant Foods",
+    emoji: "🍜",
+    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400",
+  },
+  {
+    id: "i3",
+    name: "Instant Poha",
+    price: "30",
+    unit: "per pack",
+    category: "Instant Foods",
+    emoji: "🍚",
+    image: "https://images.unsplash.com/photo-1536304993881-ff86e0c9b5c3?w=400",
+  },
+  {
+    id: "i4",
+    name: "Instant Upma",
+    price: "35",
+    unit: "per pack",
+    category: "Instant Foods",
+    emoji: "🍚",
+    image: "https://images.unsplash.com/photo-1536304993881-ff86e0c9b5c3?w=400",
+  },
+  {
+    id: "i5",
+    name: "Instant Idli Mix",
+    price: "60",
+    unit: "per pack",
+    category: "Instant Foods",
+    emoji: "🍚",
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+  },
+  {
+    id: "i6",
+    name: "Instant Dosa Mix",
+    price: "65",
+    unit: "per pack",
+    category: "Instant Foods",
+    emoji: "🫓",
+    image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+  },
+  {
+    id: "i7",
+    name: "Pasta",
+    price: "50",
+    unit: "per pack",
+    category: "Instant Foods",
+    emoji: "🍝",
+    image: "https://images.unsplash.com/photo-1551462147-ff29053bfc14?w=400",
+  },
+  {
+    id: "i8",
+    name: "Vermicelli",
+    price: "30",
+    unit: "per pack",
+    category: "Instant Foods",
+    emoji: "🍜",
+    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400",
+  },
+  {
+    id: "i9",
+    name: "Corn Flakes",
+    price: "120",
+    unit: "per pack",
+    category: "Instant Foods",
+    emoji: "🥣",
+    image: "https://images.unsplash.com/photo-1521483451569-e33803c0330c?w=400",
+  },
+  {
+    id: "i10",
+    name: "Tomato Sauce",
+    price: "55",
+    unit: "per bottle",
+    category: "Instant Foods",
+    emoji: "🍅",
+    image: "https://images.unsplash.com/photo-1546548970-71785318a17b?w=400",
+  },
+
+  // 🧴 Soaps & Body Wash
+  {
+    id: "s1",
+    name: "Lifebuoy Soap",
+    price: "30",
+    unit: "per bar",
+    category: "Soaps & Body Wash",
+    emoji: "🧼",
+    image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400",
+  },
+  {
+    id: "s2",
+    name: "Lux Soap",
+    price: "35",
+    unit: "per bar",
+    category: "Soaps & Body Wash",
+    emoji: "🧼",
+    image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400",
+  },
+  {
+    id: "s3",
+    name: "Dove Soap",
+    price: "55",
+    unit: "per bar",
+    category: "Soaps & Body Wash",
+    emoji: "🧼",
+    image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400",
+  },
+  {
+    id: "s4",
+    name: "Dettol Soap",
+    price: "45",
+    unit: "per bar",
+    category: "Soaps & Body Wash",
+    emoji: "🧼",
+    image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400",
+  },
+  {
+    id: "s5",
+    name: "Pears Soap",
+    price: "50",
+    unit: "per bar",
+    category: "Soaps & Body Wash",
+    emoji: "🧼",
+    image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400",
+  },
+  {
+    id: "s6",
+    name: "Nivea Body Wash",
+    price: "180",
+    unit: "per bottle",
+    category: "Soaps & Body Wash",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "s7",
+    name: "Dettol Body Wash",
+    price: "160",
+    unit: "per bottle",
+    category: "Soaps & Body Wash",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "s8",
+    name: "Dove Body Wash",
+    price: "200",
+    unit: "per bottle",
+    category: "Soaps & Body Wash",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "s9",
+    name: "Hand Wash",
+    price: "90",
+    unit: "per bottle",
+    category: "Soaps & Body Wash",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "s10",
+    name: "Sanitizer",
+    price: "60",
+    unit: "per bottle",
+    category: "Soaps & Body Wash",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1584265549884-d0f67a8b5f4a?w=400",
+  },
+
+  // 🧴 Shampoo & Hair Care
+  {
+    id: "h1",
+    name: "Head & Shoulders",
+    price: "170",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "h2",
+    name: "Dove Shampoo",
+    price: "180",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "h3",
+    name: "Sunsilk Shampoo",
+    price: "150",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "h4",
+    name: "Pantene Shampoo",
+    price: "190",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "h5",
+    name: "Clinic Plus",
+    price: "120",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "h6",
+    name: "Hair Conditioner",
+    price: "160",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "h7",
+    name: "Coconut Hair Oil",
+    price: "90",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "h8",
+    name: "Parachute Oil",
+    price: "110",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+  },
+  {
+    id: "h9",
+    name: "Hair Gel",
+    price: "80",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+  {
+    id: "h10",
+    name: "Hair Serum",
+    price: "150",
+    unit: "per bottle",
+    category: "Shampoo & Hair Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=400",
+  },
+
+  // 👕 Washing & Cleaning
+  {
+    id: "w1",
+    name: "Surf Excel",
+    price: "110",
+    unit: "per kg",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+  {
+    id: "w2",
+    name: "Ariel Detergent",
+    price: "120",
+    unit: "per kg",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+  {
+    id: "w3",
+    name: "Tide Detergent",
+    price: "100",
+    unit: "per kg",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+  {
+    id: "w4",
+    name: "Rin Detergent",
+    price: "90",
+    unit: "per kg",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+  {
+    id: "w5",
+    name: "Vim Dishwash Bar",
+    price: "30",
+    unit: "per bar",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+  {
+    id: "w6",
+    name: "Pril Dishwash Gel",
+    price: "85",
+    unit: "per bottle",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+  {
+    id: "w7",
+    name: "Fabric Softener",
+    price: "120",
+    unit: "per bottle",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+  {
+    id: "w8",
+    name: "Whitener",
+    price: "45",
+    unit: "per bottle",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+  {
+    id: "w9",
+    name: "Stain Remover",
+    price: "90",
+    unit: "per bottle",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+  {
+    id: "w10",
+    name: "Washing Liquid",
+    price: "150",
+    unit: "per bottle",
+    category: "Washing & Cleaning",
+    emoji: "🫧",
+    image: "https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400",
+  },
+
+  // 🦷 Dental Care
+  {
+    id: "den1",
+    name: "Colgate Toothpaste",
+    price: "60",
+    unit: "per tube",
+    category: "Dental Care",
+    emoji: "🪥",
+    image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400",
+  },
+  {
+    id: "den2",
+    name: "Pepsodent",
+    price: "55",
+    unit: "per tube",
+    category: "Dental Care",
+    emoji: "🪥",
+    image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400",
+  },
+  {
+    id: "den3",
+    name: "Sensodyne",
+    price: "120",
+    unit: "per tube",
+    category: "Dental Care",
+    emoji: "🪥",
+    image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400",
+  },
+  {
+    id: "den4",
+    name: "Closeup",
+    price: "50",
+    unit: "per tube",
+    category: "Dental Care",
+    emoji: "🪥",
+    image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400",
+  },
+  {
+    id: "den5",
+    name: "Toothbrush",
+    price: "30",
+    unit: "per piece",
+    category: "Dental Care",
+    emoji: "🪥",
+    image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400",
+  },
+  {
+    id: "den6",
+    name: "Mouthwash",
+    price: "90",
+    unit: "per bottle",
+    category: "Dental Care",
+    emoji: "🧴",
+    image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400",
+  },
+  {
+    id: "den7",
+    name: "Floss",
+    price: "60",
+    unit: "per pack",
+    category: "Dental Care",
+    emoji: "🦷",
+    image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400",
+  },
+  {
+    id: "den8",
+    name: "Tongue Cleaner",
+    price: "20",
+    unit: "per piece",
+    category: "Dental Care",
+    emoji: "🦷",
+    image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400",
+  },
+
+  // 🧹 Home Cleaning
+  {
+    id: "hc1",
+    name: "Colin Glass Cleaner",
+    price: "80",
+    unit: "per bottle",
+    category: "Home Cleaning",
+    emoji: "🧹",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+  {
+    id: "hc2",
+    name: "Lizol Floor Cleaner",
+    price: "120",
+    unit: "per bottle",
+    category: "Home Cleaning",
+    emoji: "🧹",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+  {
+    id: "hc3",
+    name: "Harpic Toilet Cleaner",
+    price: "90",
+    unit: "per bottle",
+    category: "Home Cleaning",
+    emoji: "🧹",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+  {
+    id: "hc4",
+    name: "Dettol Floor Cleaner",
+    price: "110",
+    unit: "per bottle",
+    category: "Home Cleaning",
+    emoji: "🧹",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+  {
+    id: "hc5",
+    name: "Scotch Brite",
+    price: "30",
+    unit: "per piece",
+    category: "Home Cleaning",
+    emoji: "🧽",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+  {
+    id: "hc6",
+    name: "Mop",
+    price: "150",
+    unit: "per piece",
+    category: "Home Cleaning",
+    emoji: "🧹",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+  {
+    id: "hc7",
+    name: "Broom",
+    price: "80",
+    unit: "per piece",
+    category: "Home Cleaning",
+    emoji: "🧹",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+  {
+    id: "hc8",
+    name: "Dustbin",
+    price: "120",
+    unit: "per piece",
+    category: "Home Cleaning",
+    emoji: "🗑️",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+  {
+    id: "hc9",
+    name: "Garbage Bags",
+    price: "50",
+    unit: "per pack",
+    category: "Home Cleaning",
+    emoji: "🗑️",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+  {
+    id: "hc10",
+    name: "Air Freshener",
+    price: "150",
+    unit: "per bottle",
+    category: "Home Cleaning",
+    emoji: "🌸",
+    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400",
+  },
+
+  // 🍪 Snacks
+  {
+    id: "sn1",
+    name: "Lays Chips",
+    price: "20",
+    unit: "per pack",
+    category: "Snacks",
+    emoji: "🍿",
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400",
+  },
+  {
+    id: "sn2",
+    name: "Kurkure",
+    price: "20",
+    unit: "per pack",
+    category: "Snacks",
+    emoji: "🍿",
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400",
+  },
+  {
+    id: "sn3",
+    name: "Parle G",
+    price: "10",
+    unit: "per pack",
+    category: "Snacks",
+    emoji: "🍪",
+    image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400",
+  },
+  {
+    id: "sn4",
+    name: "Marie Gold",
+    price: "25",
+    unit: "per pack",
+    category: "Snacks",
+    emoji: "🍪",
+    image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400",
+  },
+  {
+    id: "sn5",
+    name: "Good Day",
+    price: "30",
+    unit: "per pack",
+    category: "Snacks",
+    emoji: "🍪",
+    image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400",
+  },
+  {
+    id: "sn6",
+    name: "Oreo",
+    price: "35",
+    unit: "per pack",
+    category: "Snacks",
+    emoji: "🍪",
+    image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400",
+  },
+  {
+    id: "sn7",
+    name: "Pringles",
+    price: "99",
+    unit: "per can",
+    category: "Snacks",
+    emoji: "🍿",
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400",
+  },
+  {
+    id: "sn8",
+    name: "Popcorn",
+    price: "30",
+    unit: "per pack",
+    category: "Snacks",
+    emoji: "🍿",
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400",
+  },
+  {
+    id: "sn9",
+    name: "Murukku",
+    price: "40",
+    unit: "per pack",
+    category: "Snacks",
+    emoji: "🍿",
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400",
+  },
+  {
+    id: "sn10",
+    name: "Mixture",
+    price: "35",
+    unit: "per pack",
+    category: "Snacks",
+    emoji: "🍿",
+    image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400",
+  },
+
+  // 🥤 Beverages
+  {
+    id: "bv1",
+    name: "Coca Cola",
+    price: "40",
+    unit: "per bottle",
+    category: "Beverages",
+    emoji: "🥤",
+    image: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400",
+  },
+  {
+    id: "bv2",
+    name: "Pepsi",
+    price: "40",
+    unit: "per bottle",
+    category: "Beverages",
+    emoji: "🥤",
+    image: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400",
+  },
+  {
+    id: "bv3",
+    name: "Sprite",
+    price: "40",
+    unit: "per bottle",
+    category: "Beverages",
+    emoji: "🥤",
+    image: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400",
+  },
+  {
+    id: "bv4",
+    name: "Limca",
+    price: "40",
+    unit: "per bottle",
+    category: "Beverages",
+    emoji: "🥤",
+    image: "https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400",
+  },
+  {
+    id: "bv5",
+    name: "Frooti",
+    price: "20",
+    unit: "per pack",
+    category: "Beverages",
+    emoji: "🧃",
+    image: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400",
+  },
+  {
+    id: "bv6",
+    name: "Real Juice",
+    price: "90",
+    unit: "per litre",
+    category: "Beverages",
+    emoji: "🧃",
+    image: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400",
+  },
+  {
+    id: "bv7",
+    name: "Green Tea",
+    price: "120",
+    unit: "per pack",
+    category: "Beverages",
+    emoji: "🍵",
+    image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400",
+  },
+  {
+    id: "bv8",
+    name: "Coffee Powder",
+    price: "150",
+    unit: "per 200g",
+    category: "Beverages",
+    emoji: "☕",
+    image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400",
+  },
+  {
+    id: "bv9",
+    name: "Tea Powder",
+    price: "80",
+    unit: "per 250g",
+    category: "Beverages",
+    emoji: "🍵",
+    image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400",
+  },
+  {
+    id: "bv10",
+    name: "Horlicks",
+    price: "180",
+    unit: "per 500g",
+    category: "Beverages",
+    emoji: "🥛",
+    image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
   },
 ];
 
-const categories = [
-  "All",
-  "Fruits",
-  "Vegetables",
-  "Dairy",
-  "Grains",
-  "Pulses",
-  "Oils",
-  "Spices",
-];
-
 export default function ProductsScreen() {
+  const { category } = useLocalSearchParams();
   const [selected, setSelected] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    if (category) setSelected(category);
+  }, [category]);
 
   const filtered =
     selected === "All"
       ? products
       : products.filter((p) => p.category === selected);
 
+  const searchedProducts = filtered.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>All Products</Text>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterRow}
-      >
-        {categories.map((cat) => (
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search products..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#999"
+        />
+        {searchQuery ? (
           <TouchableOpacity
-            key={cat}
-            style={[
-              styles.filterBtn,
-              selected === cat && styles.filterBtnActive,
-            ]}
-            onPress={() => setSelected(cat)}
+            style={styles.clearBtn}
+            onPress={() => setSearchQuery("")}
           >
-            <Text
-              style={[
-                styles.filterText,
-                selected === cat && styles.filterTextActive,
-              ]}
-            >
-              {cat}
-            </Text>
+            <Text style={styles.clearText}>✕</Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+        ) : null}
+      </View>
+
+      <View style={styles.filterWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {categories.map((cat) => (
+            <TouchableOpacity
+              key={cat}
+              style={[
+                styles.filterBtn,
+                selected === cat && styles.filterBtnActive,
+              ]}
+              onPress={() => setSelected(cat)}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  selected === cat && styles.filterTextActive,
+                ]}
+              >
+                {cat}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.grid}>
-          {filtered.map((item) => (
+          {searchedProducts.map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.card}
               onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/product-detail",
-                  params: item,
-                })
+                router.push({ pathname: "/product-detail", params: item })
               }
             >
               <Image
@@ -182,10 +1420,24 @@ export default function ProductsScreen() {
                 </Text>
                 <Text style={styles.unit}>{item.unit}</Text>
                 <View style={styles.bottom}>
-                  <Text style={styles.price}>₹{item.price}</Text>
-                  <View style={styles.addBtn}>
+                  <Text style={styles.price}>Rs.{item.price}</Text>
+                  <TouchableOpacity
+                    style={styles.addBtn}
+                    onPress={() =>
+                      addToCart(
+                        {
+                          id: item.id,
+                          name: item.name,
+                          price: `Rs.${item.price}`,
+                          unit: item.unit,
+                          emoji: item.emoji,
+                        },
+                        1,
+                      )
+                    }
+                  >
                     <Text style={styles.addText}>+</Text>
-                  </View>
+                  </TouchableOpacity>
                 </View>
               </View>
             </TouchableOpacity>
@@ -205,7 +1457,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 16,
   },
-  filterRow: { paddingLeft: 20, marginBottom: 16 },
+  filterWrapper: { height: 50, marginBottom: 16 },
+  filterRow: { paddingLeft: 20, paddingRight: 20, alignItems: "center" },
   filterBtn: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -233,7 +1486,7 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
     overflow: "hidden",
   },
-  productImage: { width: "100%", height: 140 },
+  productImage: { width: "100%", height: 120 },
   cardInfo: { padding: 12 },
   name: { fontSize: 14, fontWeight: "600", color: "#1A2E1A" },
   unit: { fontSize: 11, color: "#888", marginTop: 2 },
@@ -253,4 +1506,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   addText: { color: "#fff", fontSize: 18, fontWeight: "bold", lineHeight: 22 },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#1A2E1A",
+  },
+  clearBtn: {
+    padding: 4,
+  },
+  clearText: {
+    fontSize: 16,
+    color: "#888",
+  },
 });

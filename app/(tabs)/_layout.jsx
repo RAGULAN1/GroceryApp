@@ -21,25 +21,39 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🏠</Text>,
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 20 }}>{focused ? "🏠" : "🏡"}</Text>
+          ),
         }}
       />
       <Tabs.Screen
         name="products"
         options={{
           title: "Products",
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🛍️</Text>,
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 20 }}>{focused ? "🛍️" : "🛍"}</Text>
+          ),
         }}
       />
       <Tabs.Screen
         name="cart"
         options={{
           title: "Cart",
-          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🛒</Text>,
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 20 }}>{"🛒"}</Text>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="login"
+        options={{
+          title: "Account",
+          tabBarIcon: ({ focused }) => (
+            <Text style={{ fontSize: 20 }}>{"👤"}</Text>
+          ),
         }}
       />
       <Tabs.Screen name="product-detail" options={{ href: null }} />
-      <Tabs.Screen name="login" options={{ href: null }} />
       <Tabs.Screen name="checkout" options={{ href: null }} />
     </Tabs>
   );

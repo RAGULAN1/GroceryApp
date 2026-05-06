@@ -1,10 +1,13 @@
+import { useRouter } from "expo-router";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { useCart } from "../CartContext";
 
 const categories = [
   { id: 1, name: "Fruits", emoji: "🍎", color: "#FFE5E5" },
@@ -17,7 +20,7 @@ const categories = [
 
 const featured = [
   {
-    id: 1,
+    id: "f1",
     name: "Fresh Tomatoes",
     price: "₹40",
     unit: "per kg",
@@ -25,7 +28,7 @@ const featured = [
     bg: "#FFE5E5",
   },
   {
-    id: 2,
+    id: "f2",
     name: "Whole Milk",
     price: "₹60",
     unit: "per litre",
@@ -33,7 +36,7 @@ const featured = [
     bg: "#FFF9E5",
   },
   {
-    id: 3,
+    id: "f3",
     name: "Brown Bread",
     price: "₹45",
     unit: "per pack",
@@ -41,7 +44,7 @@ const featured = [
     bg: "#FFE5CC",
   },
   {
-    id: 4,
+    id: "f4",
     name: "Bananas",
     price: "₹30",
     unit: "per dozen",
@@ -50,35 +53,84 @@ const featured = [
   },
 ];
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
+  const router = useRouter();
+  const { addToCart, cartCount } = useCart();
+
+  const handleCategoryPress = (category) => {
+    router.push({
+      pathname: "/(tabs)/products",
+      params: { category: category.name },
+    });
+  };
+
+  const handleProductPress = (product) => {
+    router.push({
+      pathname: "/product-detail",
+      params: {
+        name: product.name,
+        price: product.price,
+        unit: product.unit,
+        emoji: product.emoji,
+        bg: product.bg,
+      },
+    });
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart(
+      {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        unit: product.unit,
+        emoji: product.emoji,
+      },
+      1,
+    );
+    Alert.alert("Added to Cart! 🛒", `${product.name} added to your cart.`);
+  };
+
+  const handleCartPress = () => {
+    router.push("/(tabs)/cart");
+  };
+
+  const handleShopNow = () => {
+    router.push("/(tabs)/products");
+  };
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Good Morning! 👋</Text>
           <Text style={styles.subtitle}>What would you like to buy?</Text>
         </View>
-        <View style={styles.cartBtn}>
+        <TouchableOpacity style={styles.cartBtn} onPress={handleCartPress}>
           <Text style={styles.cartEmoji}>🛒</Text>
-        </View>
+          {cartCount > 0 && (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{cartCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchBar}>
+      <TouchableOpacity
+        style={styles.searchBar}
+        onPress={() => router.push("/search")}
+      >
         <Text style={styles.searchText}>🔍 Search for groceries...</Text>
-      </View>
+      </TouchableOpacity>
 
-      {/* Banner */}
       <View style={styles.banner}>
         <Text style={styles.bannerTitle}>Fresh Groceries</Text>
         <Text style={styles.bannerSub}>Delivered to your door in 2 hours</Text>
-        <View style={styles.bannerBtn}>
+        <TouchableOpacity style={styles.bannerBtn} onPress={handleShopNow}>
           <Text style={styles.bannerBtnText}>Shop Now →</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
-      {/* Categories */}
       <Text style={styles.sectionTitle}>Categories</Text>
       <ScrollView
         horizontal
@@ -89,6 +141,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={cat.id}
             style={[styles.categoryCard, { backgroundColor: cat.color }]}
+            onPress={() => handleCategoryPress(cat)}
           >
             <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
             <Text style={styles.categoryName}>{cat.name}</Text>
@@ -96,22 +149,28 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
-      {/* Featured Products */}
       <Text style={styles.sectionTitle}>Featured Products</Text>
       <View style={styles.productsGrid}>
         {featured.map((item) => (
           <TouchableOpacity
             key={item.id}
             style={[styles.productCard, { backgroundColor: item.bg }]}
+            onPress={() => handleProductPress(item)}
           >
             <Text style={styles.productEmoji}>{item.emoji}</Text>
             <Text style={styles.productName}>{item.name}</Text>
             <Text style={styles.productUnit}>{item.unit}</Text>
             <View style={styles.productBottom}>
               <Text style={styles.productPrice}>{item.price}</Text>
-              <View style={styles.addBtn}>
+              <TouchableOpacity
+                style={styles.addBtn}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart(item);
+                }}
+              >
                 <Text style={styles.addBtnText}>+</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         ))}
@@ -142,6 +201,18 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
   },
   cartEmoji: { fontSize: 20 },
+  cartBadge: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#C4622D",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cartBadgeText: { color: "#fff", fontSize: 11, fontWeight: "bold" },
   searchBar: {
     marginHorizontal: 20,
     backgroundColor: "#fff",
