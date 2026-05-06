@@ -44,7 +44,7 @@ export default function Index() {
             <FlatList
               data={data}
               keyExtractor={(item) => item.id}
-              renderItem={(item) => (
+              renderItem={({ item }: { item: any }) => (
                 <TouchableOpacity style={styles.item} onPress={handlePress}>
                   <View style={styles.itemContent}>
                     <Text style={styles.itemText}>{item.name}</Text>
@@ -54,7 +54,7 @@ export default function Index() {
             />
             <TouchableOpacity
               style={styles.searchBar}
-              onPress={() => router.push("/search")}
+              onPress={() => router.push("/search" as any)}
             >
               <Text style={styles.searchText}>🔍 Search for groceries...</Text>
             </TouchableOpacity>
