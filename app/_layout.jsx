@@ -1,7 +1,6 @@
 import { Stack } from "expo-router";
 import { AuthProvider } from "./AuthContext";
 import { CartProvider } from "./CartContext";
-import SearchScreen from "./screens/SearchScreen.jsx";
 
 export default function RootLayout() {
   return (
@@ -9,11 +8,7 @@ export default function RootLayout() {
       <CartProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="Search"
-            component={SearchScreen}
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="Search" options={{ headerShown: false }} />
           <Stack.Screen name="admin" options={{ headerShown: false }} />
           <Stack.Screen
             name="product-detail"
