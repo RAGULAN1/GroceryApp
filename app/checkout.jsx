@@ -10,8 +10,8 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { useCart } from "../CartContext";
-import { db } from "../firebaseConfig";
+import { useCart } from "./CartContext";
+import { db } from "./firebaseConfig";
 
 const slots = ["9 AM - 12 PM", "12 PM - 3 PM", "3 PM - 6 PM", "6 PM - 9 PM"];
 
