@@ -29,7 +29,7 @@ const categories = [
   "Beverages",
 ];
 
-const products = [
+export const PRODUCTS_DATA = [
   // 🥛 Dairy
   {
     id: "d1",
@@ -1345,7 +1345,7 @@ export default function ProductsScreen() {
       : products.filter((p) => p.category === selected);
 
   const searchedProducts = filtered.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (

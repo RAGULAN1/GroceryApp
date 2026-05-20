@@ -1,14 +1,14 @@
-import { useRouter } from "expo-router";
+﻿import { useRouter } from "expo-router";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useCart } from "./CartContext";
 import { db } from "./firebaseConfig";
@@ -29,91 +29,75 @@ export default function CheckoutScreen() {
 
   const placeOrder = async () => {
     if (!name || !phone || !address || !pincode || !selectedSlot) {
-      Alert.alert(
-        "Missing Fields",
-        "Please fill in all fields and select a delivery slot!",
-      );
+      Alert.alert("Missing Fields", "Please fill in all fields!");
       return;
     }
-
     setLoading(true);
     try {
       await addDoc(collection(db, "orders"), {
-        userId: "user123", // Replace with actual user ID
         items: cartItems,
-        total: total,
+        total,
         deliveryFee: delivery,
         deliverySlot: selectedSlot,
         customerInfo: { name, phone, address, pincode },
         status: "pending",
         createdAt: serverTimestamp(),
       });
-
       clearCart();
       Alert.alert("Order Placed!", "Your order has been placed successfully!", [
         { text: "OK", onPress: () => router.push("/(tabs)") },
       ]);
     } catch (error) {
-      console.error("Order error:", error);
-      Alert.alert("Error", "Failed to place order. Please try again.");
+      Alert.alert("Error", "Failed: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  if (cartItems.length === 0) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Checkout</Text>
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyEmoji}>🛒</Text>
-          <Text style={styles.emptyText}>Your cart is empty!</Text>
-          <TouchableOpacity
-            style={styles.shopBtn}
-            onPress={() => router.push("/(tabs)/products")}
-          >
-            <Text style={styles.shopBtnText}>Shop Now →</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Checkout 🛒</Text>
-
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Checkout</Text>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Delivery Details</Text>
+        <Text style={styles.label}>Full Name *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Full Name"
+          placeholder="Enter your full name"
+          placeholderTextColor="#aaa"
           value={name}
           onChangeText={setName}
         />
+        <Text style={styles.label}>Phone Number *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Phone Number"
+          placeholder="10-digit mobile number"
+          placeholderTextColor="#aaa"
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
+          maxLength={10}
         />
+        <Text style={styles.label}>Street Address *</Text>
         <TextInput
-          style={styles.input}
-          placeholder="Address"
+          style={[styles.input, { height: 80 }]}
+          placeholder="Door no, Street, Landmark"
+          placeholderTextColor="#aaa"
           value={address}
           onChangeText={setAddress}
           multiline
+          textAlignVertical="top"
         />
+        <Text style={styles.label}>Pincode *</Text>
         <TextInput
           style={styles.input}
-          placeholder="Pincode"
+          placeholder="6-digit pincode"
+          placeholderTextColor="#aaa"
           value={pincode}
           onChangeText={setPincode}
           keyboardType="numeric"
+          maxLength={6}
         />
       </View>
-
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Delivery Slot</Text>
         <View style={styles.slotsGrid}>
@@ -138,7 +122,6 @@ export default function CheckoutScreen() {
           ))}
         </View>
       </View>
-
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Order Summary</Text>
         {cartItems.map((item) => (
@@ -146,31 +129,32 @@ export default function CheckoutScreen() {
             <Text style={styles.itemName}>{item.name}</Text>
             <Text style={styles.itemQty}>x{item.qty}</Text>
             <Text style={styles.itemPrice}>
-              ₹{parseInt(item.price?.replace("₹", "") || 0) * item.qty}
+              Rs.
+              {parseInt(item.price?.replace("Rs.", "").replace("₹", "") || 0) *
+                item.qty}
             </Text>
           </View>
         ))}
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Subtotal</Text>
-          <Text style={styles.summaryValue}>₹{cartTotal}</Text>
+          <Text>Rs.{cartTotal}</Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Delivery Fee</Text>
-          <Text style={styles.summaryValue}>₹{delivery}</Text>
+          <Text>Rs.{delivery}</Text>
         </View>
         <View style={[styles.summaryRow, styles.totalRow]}>
           <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>₹{total}</Text>
+          <Text style={styles.totalValue}>Rs.{total}</Text>
         </View>
       </View>
-
       <TouchableOpacity
         style={[styles.placeOrderBtn, loading && styles.btnDisabled]}
         onPress={placeOrder}
         disabled={loading}
       >
         <Text style={styles.placeOrderText}>
-          {loading ? "Placing Order..." : `Place Order → ₹${total}`}
+          {loading ? "Placing Order..." : "Place Order - Rs." + total}
         </Text>
       </TouchableOpacity>
       <View style={{ height: 100 }} />
@@ -200,27 +184,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#1A2E1A",
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#444",
+    marginBottom: 6,
+    marginTop: 8,
   },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 8,
     fontSize: 14,
+    color: "#222",
+    backgroundColor: "#fafafa",
   },
-  slotsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
+  slotsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   slotBtn: {
     flex: 1,
     minWidth: "45%",
     borderWidth: 1,
     borderColor: "#ddd",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
     alignItems: "center",
   },
@@ -230,7 +219,6 @@ const styles = StyleSheet.create({
   summaryItem: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: 8,
   },
   itemName: { flex: 1, fontSize: 14, color: "#1A2E1A" },
@@ -239,10 +227,9 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   summaryLabel: { fontSize: 14, color: "#888" },
-  summaryValue: { fontSize: 14, color: "#1A2E1A", fontWeight: "500" },
   totalRow: {
     borderTopWidth: 1,
     borderTopColor: "#eee",
@@ -261,20 +248,4 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.6 },
   placeOrderText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  emptyBox: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingBottom: 100,
-  },
-  emptyEmoji: { fontSize: 64, marginBottom: 16 },
-  emptyText: { fontSize: 20, fontWeight: "bold", color: "#1A2E1A" },
-  shopBtn: {
-    backgroundColor: "#1A2E1A",
-    borderRadius: 12,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    marginTop: 20,
-  },
-  shopBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
 });

@@ -45,8 +45,8 @@ export default function TabLayout() {
           tabBarIcon: () => <Text style={{ fontSize: 20 }}>👤</Text>,
         }}
       />
-      <Tabs.Screen name="product-detail" options={{ href: null }} />
       <Tabs.Screen name="checkout" options={{ href: null }} />
+      <Tabs.Screen name="product-detail" options={{ href: null }} />
     </Tabs>
   );
 }

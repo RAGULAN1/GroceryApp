@@ -1,89 +1,62 @@
-﻿import { collection, getDocs } from "firebase/firestore";
+﻿import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Keyboard,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  Keyboard,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { db } from "./firebaseConfig";
+import { useCart } from "./CartContext";
+
+// ── Import products from products tab ──────────────────
+import { PRODUCTS_DATA } from "./(tabs)/products";
 
 const THEME = "#1A2E1A";
 const ACCENT = "#C4622D";
-
 const CATEGORIES = [
   "All",
   "Dairy",
   "Bakery",
   "Grains",
   "Dal & Pulses",
-  "Vegetables",
-  "Fruits",
+  "Oils",
+  "Masala & Spices",
+  "Instant Foods",
   "Snacks",
   "Beverages",
-  "Spices",
-  "Oil & Ghee",
-];
-const PRICE_RANGES = [
-  { label: "All", min: 0, max: Infinity },
-  { label: "Under ₹50", min: 0, max: 50 },
-  { label: "₹50–₹100", min: 50, max: 100 },
-  { label: "₹100–₹200", min: 100, max: 200 },
-  { label: "Above ₹200", min: 200, max: Infinity },
 ];
 
 export default function SearchScreen() {
+  const router = useRouter();
+  const { addToCart } = useCart();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const [allProducts, setAllProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [results, setResults] = useState(PRODUCTS_DATA);
   const [selectedCategory, setCategory] = useState("All");
-  const [selectedPrice] = useState(PRICE_RANGES[0]);
   const debounceRef = useRef(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const snap = await getDocs(collection(db, "products"));
-        const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setAllProducts(data);
-        setResults(data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    })();
+  const applyFilters = useCallback((q, category) => {
+    const lower = q.toLowerCase().trim();
+    const filtered = PRODUCTS_DATA.filter((p) => {
+      const matchName = !lower || p.name?.toLowerCase().includes(lower);
+      const matchCategory = category === "All" || p.category === category;
+      return matchName && matchCategory;
+    });
+    setResults(filtered);
   }, []);
-
-  const applyFilters = useCallback(
-    (q, category, priceRange) => {
-      const lower = q.toLowerCase().trim();
-      const filtered = allProducts.filter((p) => {
-        const matchName = !lower || p.name?.toLowerCase().includes(lower);
-        const matchCategory = category === "All" || p.category === category;
-        const price = parseFloat(p.price) || 0;
-        const matchPrice = price >= priceRange.min && price <= priceRange.max;
-        return matchName && matchCategory && matchPrice;
-      });
-      setResults(filtered);
-    },
-    [allProducts],
-  );
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      applyFilters(query, selectedCategory, selectedPrice);
+      applyFilters(query, selectedCategory);
     }, 300);
     return () => clearTimeout(debounceRef.current);
-  }, [query, selectedCategory, selectedPrice, allProducts, applyFilters]);
+  }, [query, selectedCategory, applyFilters]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -96,6 +69,8 @@ export default function SearchScreen() {
             placeholderTextColor="#aaa"
             value={query}
             onChangeText={setQuery}
+            returnKeyType="search"
+            onSubmitEditing={() => Keyboard.dismiss()}
             autoFocus
           />
           {query.length > 0 && (
@@ -135,33 +110,62 @@ export default function SearchScreen() {
         ))}
       </ScrollView>
 
-      {loading ? (
-        <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color={THEME} />
-        </View>
-      ) : (
-        <FlatList
-          data={results}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-          contentContainerStyle={styles.list}
-          keyboardShouldPersistTaps="handled"
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={{ fontSize: 40 }}>🔍</Text>
-              <Text style={styles.emptyTitle}>No products found</Text>
-            </View>
-          }
-          renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card}>
-              <Text style={styles.cardName}>{item.name}</Text>
-              <Text style={styles.cardUnit}>{item.unit || "per kg"}</Text>
-              <Text style={styles.cardPrice}>₹{item.price}</Text>
+      <Text style={styles.resultCount}>{results.length} products found</Text>
+
+      <FlatList
+        data={results}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Text style={{ fontSize: 40 }}>🔍</Text>
+            <Text style={styles.emptyTitle}>No products found</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setQuery("");
+                setCategory("All");
+              }}
+            >
+              <Text style={{ color: THEME, marginTop: 12, fontWeight: "600" }}>
+                Clear filters
+              </Text>
             </TouchableOpacity>
-          )}
-        />
-      )}
+          </View>
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.card}>
+            {item.image ? (
+              <Image
+                source={{ uri: item.image }}
+                style={styles.cardImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.cardImagePlaceholder}>
+                <Text style={{ fontSize: 36 }}>{item.emoji || "🛒"}</Text>
+              </View>
+            )}
+            <View style={styles.cardInfo}>
+              <Text style={styles.cardName} numberOfLines={2}>
+                {item.name}
+              </Text>
+              <Text style={styles.cardUnit}>{item.unit || "per kg"}</Text>
+              <View style={styles.cardBottom}>
+                <Text style={styles.cardPrice}>₹{item.price}</Text>
+                <TouchableOpacity
+                  style={styles.addBtn}
+                  onPress={() => addToCart(item, 1)}
+                >
+                  <Text style={styles.addBtnText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
     </SafeAreaView>
   );
 }
@@ -212,20 +216,48 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: THEME },
   chipText: { color: "#555", fontSize: 13, fontWeight: "500" },
   chipTextActive: { color: "#fff" },
+  resultCount: {
+    fontSize: 13,
+    color: "#888",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
   list: { padding: 12, paddingBottom: 40 },
   row: { justifyContent: "space-between" },
   card: {
     width: "48.5%",
     backgroundColor: "#fff",
     borderRadius: 14,
-    padding: 12,
     marginBottom: 12,
+    overflow: "hidden",
     elevation: 2,
   },
-  cardName: { fontSize: 14, fontWeight: "700", color: "#222", marginBottom: 4 },
+  cardImage: { width: "100%", height: 120 },
+  cardImagePlaceholder: {
+    width: "100%",
+    height: 120,
+    backgroundColor: "#f9f9f9",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cardInfo: { padding: 10 },
+  cardName: { fontSize: 14, fontWeight: "700", color: "#222", marginBottom: 2 },
   cardUnit: { fontSize: 11, color: "#aaa", marginBottom: 6 },
+  cardBottom: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   cardPrice: { fontSize: 16, fontWeight: "bold", color: ACCENT },
-  loadingWrap: { flex: 1, justifyContent: "center", alignItems: "center" },
+  addBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: THEME,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addBtnText: { color: "#fff", fontSize: 20, lineHeight: 22 },
   empty: { alignItems: "center", paddingTop: 60 },
   emptyTitle: {
     fontSize: 18,

@@ -13,7 +13,18 @@ export function CartProvider({ children }) {
           item.id === product.id ? { ...item, qty: item.qty + qty } : item,
         );
       }
-      return [...prev, { ...product, qty }];
+      return [
+        ...prev,
+        {
+          id: product.id || "",
+          name: product.name || "",
+          price: product.price || "0",
+          unit: product.unit || "",
+          emoji: product.emoji || "",
+          imageUrl: product.imageUrl || "",
+          qty,
+        },
+      ];
     });
   };
 
@@ -32,10 +43,18 @@ export function CartProvider({ children }) {
   const clearCart = () => setCartItems([]);
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
-  const cartTotal = cartItems.reduce(
-    (sum, item) => sum + parseInt(item.price?.replace("₹", "") || 0) * item.qty,
-    0,
-  );
+
+  const cartTotal = cartItems.reduce((sum, item) => {
+    const price =
+      parseFloat(
+        String(item.price || "0")
+          .replace("₹", "")
+          .replace("Rs.", "")
+          .replace("â‚¹", "")
+          .trim(),
+      ) || 0;
+    return sum + price * item.qty;
+  }, 0);
 
   return (
     <CartContext.Provider
@@ -55,9 +74,8 @@ export function CartProvider({ children }) {
 
 export function useCart() {
   const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within CartProvider");
-  }
+  if (!context) throw new Error("useCart must be used within CartProvider");
   return context;
 }
+
 export default CartProvider;
