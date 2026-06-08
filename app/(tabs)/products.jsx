@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+﻿import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Image,
@@ -1531,3 +1531,8 @@ const styles = StyleSheet.create({
     color: "#888",
   },
 });
+
+
+
+
+
