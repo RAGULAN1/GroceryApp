@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+﻿import { createContext, useContext, useState } from "react";
 
 const CartContext = createContext(null);
 
@@ -21,7 +21,7 @@ export function CartProvider({ children }) {
           price: product.price || "0",
           unit: product.unit || "",
           emoji: product.emoji || "",
-          imageUrl: product.imageUrl || "",
+          imageUrl: product.imageUrl || product.image || "",
           qty,
         },
       ];
@@ -45,28 +45,12 @@ export function CartProvider({ children }) {
   const cartCount = cartItems.reduce((sum, item) => sum + item.qty, 0);
 
   const cartTotal = cartItems.reduce((sum, item) => {
-    const price =
-      parseFloat(
-        String(item.price || "0")
-          .replace("₹", "")
-          .replace("Rs.", "")
-          .replace("â‚¹", "")
-          .trim(),
-      ) || 0;
+    const price = parseFloat(String(item.price || "0").replace("Rs.", "").trim()) || 0;
     return sum + price * item.qty;
   }, 0);
 
   return (
-    <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        updateQty,
-        clearCart,
-        cartCount,
-        cartTotal,
-      }}
-    >
+    <CartContext.Provider value={{ cartItems, addToCart, updateQty, clearCart, cartCount, cartTotal }}>
       {children}
     </CartContext.Provider>
   );

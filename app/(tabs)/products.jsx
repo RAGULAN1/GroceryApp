@@ -1327,7 +1327,7 @@ export const PRODUCTS_DATA = [
     image: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400",
   },
 ];
-
+const products = PRODUCTS_DATA;
 export default function ProductsScreen() {
   const { category } = useLocalSearchParams();
   const [selected, setSelected] = useState("All");
@@ -1531,6 +1531,7 @@ const styles = StyleSheet.create({
     color: "#888",
   },
 });
+
 
 
 
