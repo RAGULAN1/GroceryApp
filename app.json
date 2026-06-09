@@ -1,4 +1,4 @@
-{
+﻿{
   "expo": {
     "name": "Kadai Veedhi",
     "slug": "kadai-veedhi",
@@ -22,8 +22,14 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["CAMERA", "CAMERA"],
-      "package": "com.ragulan5859.GroceryApp"
+      "permissions": [
+        "CAMERA",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "android.permission.SCHEDULE_EXACT_ALARM"
+      ],
+      "package": "com.ragulan5859.GroceryApp",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -41,6 +47,14 @@
           "dark": {
             "backgroundColor": "#000000"
           }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#1A2E1A",
+          "sounds": []
         }
       ]
     ],

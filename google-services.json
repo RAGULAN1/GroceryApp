@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "380682132082",
+    "project_id": "kadai-veedhi",
+    "storage_bucket": "kadai-veedhi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:380682132082:android:b3c94557ff4486f30940eb",
+        "android_client_info": {
+          "package_name": "com.ragulan5859.GroceryApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9mX2JRVglLNevCI9pphPCoabvTck37ZQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

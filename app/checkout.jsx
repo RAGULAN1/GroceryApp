@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { useCart } from "./CartContext";
+import { sendLocalNotification } from "./notifications";
 
 const FIREBASE_API_KEY = "AIzaSyAsJs5DYiCone1Nvo4mDem9mWvt-3ZZZLQ";
 const PROJECT_ID = "kadai-veedhi";
@@ -59,6 +60,7 @@ export default function CheckoutScreen() {
 
       if (res.ok) {
         clearCart();
+      await sendLocalNotification("Order Placed! 🎉", "Your order has been placed successfully! We will deliver soon.");
         Alert.alert("Order Placed!", "Your order has been placed successfully!", [
           { text: "OK", onPress: () => router.push("/(tabs)") },
         ]);
@@ -163,3 +165,4 @@ const styles = StyleSheet.create({
   btnDisabled: { opacity: 0.6 },
   placeOrderText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });
+
