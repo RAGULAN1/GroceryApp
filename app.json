@@ -26,7 +26,9 @@
         "CAMERA",
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "android.permission.SCHEDULE_EXACT_ALARM"
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
       ],
       "package": "com.ragulan5859.GroceryApp",
       "googleServicesFile": "./google-services.json"
@@ -76,3 +78,4 @@
     "owner": "ragulan5859"
   }
 }
+
