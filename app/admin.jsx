@@ -32,6 +32,8 @@ export default function AdminScreen() {
   const [viewingProduct, setViewingProduct] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", price: "", unit: "", category: "", emoji: "", stock: "" });
+  const [productSearch, setProductSearch] = useState("");
+
   const [stockFilter, setStockFilter] = useState("all");
   const [adminInfo, setAdminInfo] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
@@ -511,73 +513,135 @@ export default function AdminScreen() {
     );
   };
 
-  const renderProducts = () => (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <View style={styles.stockSummary}>
-        <View style={[styles.stockSummaryCard, { backgroundColor: "#D4EDDA" }]}>
-          <Text style={styles.stockSummaryNum}>{allProducts.length}</Text>
-          <Text style={styles.stockSummaryLabel}>Total</Text>
-        </View>
-        <View style={[styles.stockSummaryCard, { backgroundColor: "#FFF3CD" }]}>
-          <Text style={styles.stockSummaryNum}>{Object.keys(categoryCounts).length}</Text>
-          <Text style={styles.stockSummaryLabel}>Categories</Text>
-        </View>
-        <View style={[styles.stockSummaryCard, { backgroundColor: "#CCE5FF" }]}>
-          <Text style={styles.stockSummaryNum}>{adminProducts.length}</Text>
-          <Text style={styles.stockSummaryLabel}>Custom</Text>
-        </View>
-      </View>
+    const renderProducts = () => {
+    const categories = {};
+    allProducts.forEach(p => {
+      const cat = p.category || "Other";
+      if (!categories[cat]) categories[cat] = [];
+      categories[cat].push(p);
+    });
 
-      <Text style={styles.sectionTitle}>By Category</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-        {Object.entries(categoryCounts).map(([cat, count]) => (
-          <View key={cat} style={styles.categoryChip}>
-            <Text style={styles.categoryChipText}>{cat}</Text>
-            <Text style={styles.categoryChipCount}>{count}</Text>
-          </View>
-        ))}
-      </ScrollView>
+    const categoryColors = [
+      { bg: "#E5FFE5", text: "#155724", emoji: "🥛" },
+      { bg: "#FFF3CD", text: "#856404", emoji: "🍞" },
+      { bg: "#CCE5FF", text: "#004085", emoji: "🌾" },
+      { bg: "#F8D7DA", text: "#721C24", emoji: "🫘" },
+      { bg: "#E8D5FF", text: "#4a0080", emoji: "🛒" },
+      { bg: "#FFE5CC", text: "#8B4513", emoji: "🌶️" },
+      { bg: "#D4EDDA", text: "#155724", emoji: "🍪" },
+      { bg: "#FFF9E5", text: "#856404", emoji: "🥤" },
+    ];
 
-      <View style={styles.filterRow}>
-        {["all", "low", "out"].map(f => (
-          <TouchableOpacity key={f} style={[styles.filterBtn, stockFilter === f && styles.filterBtnActive]} onPress={() => setStockFilter(f)}>
-            <Text style={[styles.filterBtnText, stockFilter === f && styles.filterBtnTextActive]}>
-              {f === "all" ? "All" : f === "low" ? "Low Stock" : "Out of Stock"}
-            </Text>
+    if (selectedCategory) {
+      const catProducts = (categories[selectedCategory] || []).filter(p =>
+        productSearch === "" || p.name?.toLowerCase().includes(productSearch.toLowerCase())
+      );
+      return (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => { setSelectedCategory(null); setProductSearch(""); }}>
+            <Text style={styles.backBtnText}>← Back to Categories</Text>
           </TouchableOpacity>
-        ))}
-      </View>
 
-      <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddProduct(true)}>
-        <Text style={styles.addBtnText}>+ Add New Product</Text>
-      </TouchableOpacity>
-
-      {filteredProducts.map((product, index) => (
-        <TouchableOpacity key={index} style={styles.productCard} onPress={() => { setViewingProduct(product); setShowProductDetail(true); }}>
-          <View style={styles.productRow}>
-            <Text style={styles.productEmoji}>{product.emoji || "🛒"}</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.productName}>{product.name}</Text>
-              <Text style={styles.productPrice}>Rs.{product.price} | {product.unit}</Text>
-              <Text style={styles.productCategory}>{product.category}</Text>
-            </View>
-            <View style={{ alignItems: "flex-end", gap: 4 }}>
-              <View style={[styles.stockBadge, { backgroundColor: getStockColor(product.stock) }]}>
-                <Text style={[styles.stockBadgeText, { color: getStockTextColor(product.stock) }]}>{getStockLabel(product.stock)}</Text>
-              </View>
-              <Text style={styles.stockCount}>Stock: {product.stock}</Text>
-              {!product.isBuiltIn && (
-                <TouchableOpacity style={styles.deleteBtn} onPress={() => deleteProduct(product.path)}>
-                  <Text style={styles.deleteBtnText}>Delete</Text>
-                </TouchableOpacity>
-              )}
+          <View style={styles.catDetailHeader}>
+            <Text style={styles.catDetailEmoji}>{categoryColors[Object.keys(categories).indexOf(selectedCategory) % categoryColors.length]?.emoji || "🛒"}</Text>
+            <View>
+              <Text style={styles.catDetailTitle}>{selectedCategory}</Text>
+              <Text style={styles.catDetailCount}>{catProducts.length} products</Text>
             </View>
           </View>
+
+          <View style={styles.productSearchBox}>
+            <TextInput
+              style={styles.productSearchInput}
+              placeholder={"🔍 Search in " + selectedCategory + "..."}
+              value={productSearch}
+              onChangeText={setProductSearch}
+              placeholderTextColor="#aaa"
+            />
+            {productSearch !== "" && (
+              <TouchableOpacity onPress={() => setProductSearch("")}>
+                <Text style={styles.productSearchClear}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddProduct(true)}>
+            <Text style={styles.addBtnText}>+ Add New Product</Text>
+          </TouchableOpacity>
+
+          {catProducts.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyEmoji}>🔍</Text>
+              <Text style={styles.emptyText}>No products found!</Text>
+            </View>
+          ) : (
+            catProducts.map((product, index) => (
+              <TouchableOpacity key={index} style={styles.productCard} onPress={() => { setViewingProduct(product); setShowProductDetail(true); }}>
+                <View style={styles.productRow}>
+                  <Text style={styles.productEmoji}>{product.emoji || "🛒"}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.productName}>{product.name}</Text>
+                    <Text style={styles.productPrice}>Rs.{product.price} | {product.unit}</Text>
+                    <Text style={styles.productCategory}>{product.category}</Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end", gap: 4 }}>
+                    <View style={[styles.stockBadge, { backgroundColor: getStockColor(product.stock) }]}>
+                      <Text style={[styles.stockBadgeText, { color: getStockTextColor(product.stock) }]}>{getStockLabel(product.stock)}</Text>
+                    </View>
+                    <Text style={styles.stockCount}>Stock: {product.stock}</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      );
+    }
+
+    return (
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.stockSummary}>
+          <View style={[styles.stockSummaryCard, { backgroundColor: "#D4EDDA" }]}>
+            <Text style={styles.stockSummaryNum}>{allProducts.length}</Text>
+            <Text style={styles.stockSummaryLabel}>Total Products</Text>
+          </View>
+          <View style={[styles.stockSummaryCard, { backgroundColor: "#FFF3CD" }]}>
+            <Text style={styles.stockSummaryNum}>{Object.keys(categories).length}</Text>
+            <Text style={styles.stockSummaryLabel}>Categories</Text>
+          </View>
+          <View style={[styles.stockSummaryCard, { backgroundColor: "#CCE5FF" }]}>
+            <Text style={styles.stockSummaryNum}>{adminProducts.length}</Text>
+            <Text style={styles.stockSummaryLabel}>Custom Added</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddProduct(true)}>
+          <Text style={styles.addBtnText}>+ Add New Product</Text>
         </TouchableOpacity>
-      ))}
-      <View style={{ height: 100 }} />
-    </ScrollView>
-  );
+
+        <Text style={styles.sectionTitle}>Product Categories</Text>
+        <View style={styles.ordersGrid}>
+          {Object.entries(categories).map(([cat, prods], index) => {
+            const colorSet = categoryColors[index % categoryColors.length];
+            return (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.orderBox, { backgroundColor: colorSet.bg }]}
+                onPress={() => { setSelectedCategory(cat); setProductSearch(""); }}
+              >
+                <Text style={styles.orderBoxEmoji}>{colorSet.emoji}</Text>
+                <Text style={[styles.orderBoxCount, { color: colorSet.text }]}>{prods.length}</Text>
+                <Text style={[styles.orderBoxLabel, { color: colorSet.text }]}>{cat}</Text>
+                <Text style={[styles.orderBoxTap, { color: colorSet.text }]}>Tap to view →</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <View style={{ height: 100 }} />
+      </ScrollView>
+    );
+  };
 
   const renderCustomers = () => (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -933,15 +997,27 @@ const styles = StyleSheet.create({
   revenueEmoji: { fontSize: 40, marginBottom: 8 },
   revenueAmount: { fontSize: 32, fontWeight: "bold", color: "#1A2E1A" },
   revenueLabel: { fontSize: 13, color: "#555", marginTop: 4 },
+  productSearchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: "#eee" },
+  productSearchInput: { flex: 1, fontSize: 14, color: "#1A2E1A" },
+  productSearchClear: { fontSize: 16, color: "#888", paddingHorizontal: 8 },
   catDetailHeader: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#eee" },
   catDetailEmoji: { fontSize: 40 },
   catDetailTitle: { fontSize: 20, fontWeight: "bold", color: "#1A2E1A" },
   catDetailCount: { fontSize: 13, color: "#888", marginTop: 4 },
+  productSearchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: "#eee" },
+  productSearchInput: { flex: 1, fontSize: 14, color: "#1A2E1A" },
+  productSearchClear: { fontSize: 16, color: "#888", paddingHorizontal: 8 },
   catDetailHeader: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#eee" },
   catDetailEmoji: { fontSize: 40 },
   catDetailTitle: { fontSize: 20, fontWeight: "bold", color: "#1A2E1A" },
   catDetailCount: { fontSize: 13, color: "#888", marginTop: 4 },
 });
+
+
+
+
+
+
 
 
 
