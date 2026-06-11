@@ -1,4 +1,7 @@
 ﻿import { useRouter } from "expo-router";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -33,6 +36,11 @@ export default function AdminScreen() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState({ name: "", price: "", unit: "", category: "", emoji: "", stock: "" });
   const [productSearch, setProductSearch] = useState("");
+  const [reportFilter, setReportFilter] = useState("all");
+  const [reportDetail, setReportDetail] = useState(null);
+  const [reportDetailTitle, setReportDetailTitle] = useState("");
+  const [reportCategory, setReportCategory] = useState("all");
+  const [reportProduct, setReportProduct] = useState("all");
 
   const [stockFilter, setStockFilter] = useState("all");
   const [adminInfo, setAdminInfo] = useState(null);
@@ -252,6 +260,112 @@ export default function AdminScreen() {
     ]);
   };
 
+  const generateReport = async (type) => {
+    try {
+      const totalRevenue = getTotalRevenue();
+      const placed = orders.filter(o => o.fields?.status?.stringValue === "Placed").length;
+      const processing = orders.filter(o => o.fields?.status?.stringValue === "Processing").length;
+      const delivered = orders.filter(o => o.fields?.status?.stringValue === "Delivered").length;
+      const cancelled = orders.filter(o => o.fields?.status?.stringValue === "Cancelled").length;
+      const outForDelivery = orders.filter(o => o.fields?.status?.stringValue === "Out for Delivery").length;
+      const today = new Date().toLocaleDateString("en-IN");
+
+      if (type === "pdf") {
+        const html = `
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; color: #1A2E1A; }
+              h1 { color: #1A2E1A; text-align: center; border-bottom: 2px solid #1A2E1A; padding-bottom: 10px; }
+              h2 { color: #C4622D; margin-top: 20px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              th { background: #1A2E1A; color: white; padding: 10px; text-align: left; }
+              td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+              tr:nth-child(even) { background: #f9f9f9; }
+              .stat { display: inline-block; width: 45%; background: #f0f8f0; border-radius: 8px; padding: 12px; margin: 5px; text-align: center; }
+              .stat-num { font-size: 24px; font-weight: bold; color: #1A2E1A; }
+              .stat-label { font-size: 12px; color: #888; }
+              .revenue { background: #1A2E1A; color: white; padding: 16px; border-radius: 8px; text-align: center; margin: 10px 0; }
+              .revenue-num { font-size: 32px; font-weight: bold; }
+              .footer { text-align: center; color: #888; font-size: 12px; margin-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <h1>Kadai Veedhi - Sales Report</h1>
+            <p style="text-align:center; color:#888;">Generated on ${today}</p>
+            
+            <div class="revenue">
+              <div>Total Revenue</div>
+              <div class="revenue-num">Rs.${totalRevenue}</div>
+              <div>from ${orders.length} orders</div>
+            </div>
+
+            <h2>Order Summary</h2>
+            <div>
+              <div class="stat"><div class="stat-num">${orders.length}</div><div class="stat-label">Total Orders</div></div>
+              <div class="stat"><div class="stat-num">${placed}</div><div class="stat-label">New Orders</div></div>
+              <div class="stat"><div class="stat-num">${processing}</div><div class="stat-label">Processing</div></div>
+              <div class="stat"><div class="stat-num">${outForDelivery}</div><div class="stat-label">Out for Delivery</div></div>
+              <div class="stat"><div class="stat-num">${delivered}</div><div class="stat-label">Delivered</div></div>
+              <div class="stat"><div class="stat-num">${cancelled}</div><div class="stat-label">Cancelled</div></div>
+            </div>
+
+            <h2>Customer Summary</h2>
+            <div>
+              <div class="stat"><div class="stat-num">${customers.length}</div><div class="stat-label">Total Customers</div></div>
+              <div class="stat"><div class="stat-num">${allProducts.length}</div><div class="stat-label">Total Products</div></div>
+            </div>
+
+            <h2>Order Details</h2>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Amount</th>
+                <th>Slot</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+              ${orders.map((o, i) => {
+                const f = o.fields || {};
+                const date = f.createdAt?.stringValue ? new Date(f.createdAt.stringValue).toLocaleDateString("en-IN") : "N/A";
+                return `<tr>
+                  <td>${i+1}</td>
+                  <td>${f.name?.stringValue || ""}</td>
+                  <td>${f.phone?.stringValue || ""}</td>
+                  <td>Rs.${f.total?.integerValue || 0}</td>
+                  <td>${f.selectedSlot?.stringValue || ""}</td>
+                  <td>${f.status?.stringValue || ""}</td>
+                  <td>${date}</td>
+                </tr>`;
+              }).join("")}
+            </table>
+            <div class="footer">Kadai Veedhi - Fresh groceries at your doorstep</div>
+          </body>
+          </html>
+        `;
+        const { uri } = await Print.printToFileAsync({ html, base64: false });
+        const newUri = FileSystem.documentDirectory + "KadaiVeedhi_Report_" + Date.now() + ".pdf";
+        await FileSystem.moveAsync({ from: uri, to: newUri });
+        await Sharing.shareAsync(newUri, { mimeType: "application/pdf" });
+
+      } else if (type === "csv") {
+        let csv = "Order#,Customer,Phone,Address,Amount,Slot,Status,Date\n";
+        orders.forEach((o, i) => {
+          const f = o.fields || {};
+          const date = f.createdAt?.stringValue ? new Date(f.createdAt.stringValue).toLocaleDateString("en-IN") : "N/A";
+          csv += `${i+1},"${f.name?.stringValue || ""}","${f.phone?.stringValue || ""}","${f.address?.stringValue || ""}",${f.total?.integerValue || 0},"${f.selectedSlot?.stringValue || ""}","${f.status?.stringValue || ""}","${date}"\n`;
+        });
+        const csvUri = FileSystem.documentDirectory + "KadaiVeedhi_Report_" + Date.now() + ".csv";
+        await FileSystem.writeAsStringAsync(csvUri, csv);
+        await Sharing.shareAsync(csvUri, { mimeType: "text/csv" });
+      }
+    } catch (err) {
+      Alert.alert("Error", "Failed to generate report: " + err.message);
+    }
+  };
+
   const getTotalRevenue = () => orders.reduce((sum, o) => sum + (parseInt(o.fields?.total?.integerValue) || 0), 0);
 
   const getStatusColor = (s) => ({ Placed: "#FFF3CD", Processing: "#CCE5FF", "Out for Delivery": "#D4EDDA", Delivered: "#D4EDDA", Cancelled: "#F8D7DA" }[s] || "#FFF3CD");
@@ -289,6 +403,7 @@ export default function AdminScreen() {
     { key: "orders", emoji: "📦", label: "Orders" },
     { key: "products", emoji: "🛍️", label: "Products" },
     { key: "customers", emoji: "👥", label: "Users" },
+    { key: "report", emoji: "📈", label: "Report" },
     { key: "account", emoji: "👑", label: "Admin" },
   ];
 
@@ -680,6 +795,281 @@ export default function AdminScreen() {
     </ScrollView>
   );
 
+  const renderReport = () => {
+    const now = new Date();
+
+    const getFilteredOrders = () => {
+      if (reportFilter === "all") return orders;
+      return orders.filter(o => {
+        const f = o.fields || {};
+        const dateStr = f.createdAt?.stringValue || o.createTime;
+        if (!dateStr) return false;
+        const createdAt = new Date(dateStr);
+        if (isNaN(createdAt.getTime())) return false;
+        if (reportFilter === "today") return createdAt.toDateString() === now.toDateString();
+        else if (reportFilter === "week") return createdAt >= new Date(now - 7 * 24 * 60 * 60 * 1000);
+        else if (reportFilter === "month") return createdAt.getMonth() === now.getMonth() && createdAt.getFullYear() === now.getFullYear();
+        else if (reportFilter === "year") return createdAt.getFullYear() === now.getFullYear();
+        return true;
+      });
+    };
+
+    const filteredOrds = getFilteredOrders();
+    const totalRevenue = filteredOrds.reduce((sum, o) => sum + (parseInt(o.fields?.total?.integerValue) || 0), 0);
+    const delivered = filteredOrds.filter(o => o.fields?.status?.stringValue === "Delivered");
+    const cancelled = filteredOrds.filter(o => o.fields?.status?.stringValue === "Cancelled");
+    const placed = filteredOrds.filter(o => o.fields?.status?.stringValue === "Placed");
+    const processing = filteredOrds.filter(o => o.fields?.status?.stringValue === "Processing");
+    const outDelivery = filteredOrds.filter(o => o.fields?.status?.stringValue === "Out for Delivery");
+    const avgOrder = filteredOrds.length > 0 ? Math.round(totalRevenue / filteredOrds.length) : 0;
+
+    const slotCounts = {};
+    filteredOrds.forEach(o => {
+      const slot = o.fields?.selectedSlot?.stringValue || "Unknown";
+      slotCounts[slot] = (slotCounts[slot] || 0) + 1;
+    });
+    const popularSlot = Object.entries(slotCounts).sort((a,b) => b[1]-a[1])[0]?.[0] || "N/A";
+
+    const categoryRevenue = {};
+    filteredOrds.forEach(o => {
+      try {
+        const items = JSON.parse(o.fields?.items?.stringValue || "[]");
+        items.forEach(item => {
+          const cat = item.category || "Other";
+          const price = parseInt(String(item.price || "0").replace("Rs.", "").trim()) * (item.qty || 1);
+          categoryRevenue[cat] = (categoryRevenue[cat] || 0) + price;
+        });
+      } catch(e) {}
+    });
+
+    const productRevenue = {};
+    filteredOrds.forEach(o => {
+      try {
+        const items = JSON.parse(o.fields?.items?.stringValue || "[]");
+        items.forEach(item => {
+          const name = item.name || "Unknown";
+          const price = parseInt(String(item.price || "0").replace("Rs.", "").trim()) * (item.qty || 1);
+          productRevenue[name] = (productRevenue[name] || 0) + price;
+        });
+      } catch(e) {}
+    });
+
+    const topProducts = Object.entries(productRevenue).sort((a,b) => b[1]-a[1]).slice(0, 5);
+    const topCategories = Object.entries(categoryRevenue).sort((a,b) => b[1]-a[1]);
+
+    const filters = [
+      { key: "all", label: "All Time" },
+      { key: "today", label: "Today" },
+      { key: "week", label: "This Week" },
+      { key: "month", label: "This Month" },
+      { key: "year", label: "This Year" },
+    ];
+
+    const openDetail = (title, orderList) => {
+      setReportDetailTitle(title);
+      setReportDetail(orderList);
+    };
+
+    if (reportDetail) {
+      const isProductReport = reportDetail.length > 0 && reportDetail[0] && reportDetail[0]._isProduct === true;
+      return (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => setReportDetail(null)}>
+            <Text style={styles.backBtnText}>← Back to Report</Text>
+          </TouchableOpacity>
+          <View style={styles.selectedHeader}>
+            <Text style={styles.selectedHeaderEmoji}>📋</Text>
+            <Text style={[styles.selectedHeaderTitle, { color: "#1A2E1A" }]}>{reportDetailTitle}</Text>
+            <Text style={[styles.selectedHeaderCount, { color: "#1A2E1A" }]}>{reportDetail.length}</Text>
+          </View>
+          {reportDetail.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyEmoji}>📦</Text>
+              <Text style={styles.emptyText}>No orders found!</Text>
+            </View>
+          ) : reportDetail.map((order, index) => {
+            const fields = order.fields || {};
+            const status = fields.status?.stringValue || "Placed";
+            const orderId = (order.name || "").split("/").pop();
+            const date = fields.createdAt?.stringValue
+              ? new Date(fields.createdAt.stringValue).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: true })
+              : "Old order";
+            return (
+              <View key={index} style={styles.orderCard}>
+                <View style={styles.orderTop}>
+                  <View>
+                    <Text style={styles.orderId}>#{orderId.slice(-6)}</Text>
+                    <Text style={styles.orderTime}>{date}</Text>
+                  </View>
+                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(status) }]}>
+                    <Text style={[styles.statusText, { color: getStatusTextColor(status) }]}>{status}</Text>
+                  </View>
+                </View>
+                <Text style={styles.customerName}>{fields.name?.stringValue}</Text>
+                <Text style={styles.customerPhone}>{fields.phone?.stringValue}</Text>
+                <Text style={styles.deliverySlot}>🕐 {fields.selectedSlot?.stringValue}</Text>
+                <Text style={styles.orderTotal}>💰 Rs.{fields.total?.integerValue}</Text>
+              </View>
+            );
+          })}
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      );
+    }
+
+    return (
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionTitle}>📈 Sales Report</Text>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+          {filters.map(f => (
+            <TouchableOpacity key={f.key} style={[styles.filterChip, reportFilter === f.key && styles.filterChipActive]} onPress={() => setReportFilter(f.key)}>
+              <Text style={[styles.filterChipText, reportFilter === f.key && styles.filterChipTextActive]}>{f.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <View style={styles.statsGrid}>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: "#E5FFE5" }]} onPress={() => openDetail("All Orders", filteredOrds)}>
+            <Text style={styles.statEmoji}>💰</Text>
+            <Text style={styles.statNumber}>Rs.{totalRevenue}</Text>
+            <Text style={styles.statLabel}>Revenue →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: "#CCE5FF" }]} onPress={() => openDetail("All Orders", filteredOrds)}>
+            <Text style={styles.statEmoji}>📦</Text>
+            <Text style={styles.statNumber}>{filteredOrds.length}</Text>
+            <Text style={styles.statLabel}>Orders →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: "#D4EDDA" }]} onPress={() => openDetail("Delivered Orders", delivered)}>
+            <Text style={styles.statEmoji}>✅</Text>
+            <Text style={styles.statNumber}>{delivered.length}</Text>
+            <Text style={styles.statLabel}>Delivered →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: "#F8D7DA" }]} onPress={() => openDetail("Cancelled Orders", cancelled)}>
+            <Text style={styles.statEmoji}>❌</Text>
+            <Text style={styles.statNumber}>{cancelled.length}</Text>
+            <Text style={styles.statLabel}>Cancelled →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: "#FFF3CD" }]} onPress={() => openDetail("New Orders", placed)}>
+            <Text style={styles.statEmoji}>🆕</Text>
+            <Text style={styles.statNumber}>{placed.length}</Text>
+            <Text style={styles.statLabel}>New Orders →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: "#E8D5FF" }]} onPress={() => openDetail("Processing Orders", processing)}>
+            <Text style={styles.statEmoji}>⚙️</Text>
+            <Text style={styles.statNumber}>{processing.length}</Text>
+            <Text style={styles.statLabel}>Processing →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: "#D4EDDA" }]} onPress={() => openDetail("Out for Delivery", outDelivery)}>
+            <Text style={styles.statEmoji}>🚚</Text>
+            <Text style={styles.statNumber}>{outDelivery.length}</Text>
+            <Text style={styles.statLabel}>On Delivery →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.statCard, { backgroundColor: "#FFF3CD" }]} onPress={() => openDetail("All Orders", filteredOrds)}>
+            <Text style={styles.statEmoji}>💵</Text>
+            <Text style={styles.statNumber}>Rs.{avgOrder}</Text>
+            <Text style={styles.statLabel}>Avg Order →</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.reportInfoCard}>
+          <Text style={styles.reportInfoLabel}>🕐 Popular Slot</Text>
+          <Text style={styles.reportInfoValue}>{popularSlot}</Text>
+        </View>
+
+        <Text style={styles.sectionTitle}>📦 Revenue by Category</Text>
+        {topCategories.length === 0 ? (
+          <View style={styles.emptyBox}><Text style={styles.emptyText}>No data</Text></View>
+        ) : topCategories.map(([cat, rev], i) => (
+          <TouchableOpacity key={i} style={styles.reportBarCard} onPress={() => {
+            const catOrders = filteredOrds.filter(o => {
+              try {
+                const items = JSON.parse(o.fields?.items?.stringValue || "[]");
+                return items.some(item => (item.category || "Other") === cat);
+              } catch(e) { return false; }
+            });
+            openDetail(cat + " Orders", catOrders);
+          }}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.reportBarLabel}>{cat}</Text>
+              <View style={styles.reportBarBg}>
+                <View style={[styles.reportBarFill, { width: (rev / (topCategories[0]?.[1] || 1) * 100) + "%" }]} />
+              </View>
+            </View>
+            <Text style={styles.reportBarValue}>Rs.{rev} →</Text>
+          </TouchableOpacity>
+        ))}
+
+        <Text style={styles.sectionTitle}>🏆 Top Products</Text>
+        {topProducts.length === 0 ? (
+          <View style={styles.emptyBox}><Text style={styles.emptyText}>No data</Text></View>
+        ) : topProducts.map(([name, rev], i) => (
+          <TouchableOpacity key={i} style={styles.reportBarCard} onPress={() => {
+            const prodOrders = filteredOrds.filter(o => {
+              try {
+                const items = JSON.parse(o.fields?.items?.stringValue || "[]");
+                return items.some(item => item.name === name);
+              } catch(e) { return false; }
+            });
+            openDetail(name + " Orders", prodOrders);
+          }}>
+            <Text style={styles.reportRank}>#{i+1}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.reportBarLabel}>{name}</Text>
+              <View style={styles.reportBarBg}>
+                <View style={[styles.reportBarFill, { width: (rev / (topProducts[0]?.[1] || 1) * 100) + "%" }]} />
+              </View>
+            </View>
+            <Text style={styles.reportBarValue}>Rs.{rev} →</Text>
+          </TouchableOpacity>
+        ))}
+
+        <Text style={styles.sectionTitle}>🛍️ Products by Category</Text>
+        <View style={styles.ordersGrid}>
+          {(() => {
+            const cats = {};
+            allProducts.forEach(p => { const c = p.category || "Other"; if (!cats[c]) cats[c] = []; cats[c].push(p); });
+            const colors = ["#E5FFE5","#FFF3CD","#CCE5FF","#F8D7DA","#E8D5FF","#FFE5CC","#D4EDDA","#FFF9E5"];
+            const emojis = ["🥛","🍞","🌾","🫘","🛒","🌶️","🍪","🥤"];
+            return Object.entries(cats).map(([cat, prods], i) => (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.orderBox, { backgroundColor: colors[i % colors.length] }]}
+                onPress={() => {
+                  setReportDetailTitle(cat + " Products");
+                  const productList = prods.map(p => ({ _isProduct: true, name: p.name, price: p.price, unit: p.unit, category: p.category, emoji: p.emoji, stock: p.stock }));
+                  setReportDetail(productList);
+                }}
+              >
+                <Text style={styles.orderBoxEmoji}>{emojis[i % emojis.length]}</Text>
+                <Text style={[styles.orderBoxCount, { color: "#1A2E1A" }]}>{prods.length}</Text>
+                <Text style={[styles.orderBoxLabel, { color: "#1A2E1A" }]}>{cat}</Text>
+                <Text style={[styles.orderBoxTap, { color: "#555" }]}>Tap to view →</Text>
+              </TouchableOpacity>
+            ));
+          })()}
+        </View>
+
+        <Text style={styles.sectionTitle}>Export Report</Text>
+        <TouchableOpacity style={styles.reportBtn} onPress={() => generateReport("pdf")}>
+          <Text style={styles.reportBtnEmoji}>📄</Text>
+          <View>
+            <Text style={styles.reportBtnTitle}>Export as PDF</Text>
+            <Text style={styles.reportBtnSub}>Full report with order details</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.reportBtn, { backgroundColor: "#E5FFE5" }]} onPress={() => generateReport("csv")}>
+          <Text style={styles.reportBtnEmoji}>📊</Text>
+          <View>
+            <Text style={[styles.reportBtnTitle, { color: "#155724" }]}>Export as CSV</Text>
+            <Text style={styles.reportBtnSub}>Open in Excel or Google Sheets</Text>
+          </View>
+        </TouchableOpacity>
+        <View style={{ height: 100 }} />
+      </ScrollView>
+    );
+  };
+
   const renderAccount = () => (
     <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.adminProfileCard}>
@@ -739,6 +1129,7 @@ export default function AdminScreen() {
           {activeTab === "orders" && renderOrders()}
           {activeTab === "products" && renderProducts()}
           {activeTab === "customers" && renderCustomers()}
+          {activeTab === "report" && renderReport()}
           {activeTab === "account" && renderAccount()}
         </View>
       )}
@@ -997,6 +1388,23 @@ const styles = StyleSheet.create({
   revenueEmoji: { fontSize: 40, marginBottom: 8 },
   revenueAmount: { fontSize: 32, fontWeight: "bold", color: "#1A2E1A" },
   revenueLabel: { fontSize: 13, color: "#555", marginTop: 4 },
+  reportBtn: { flexDirection: "row", alignItems: "center", gap: 16, backgroundColor: "#FFF3CD", borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#eee" },
+  reportBtnEmoji: { fontSize: 36 },
+  reportBtnTitle: { fontSize: 16, fontWeight: "bold", color: "#856404" },
+  reportBtnSub: { fontSize: 12, color: "#888", marginTop: 2 },
+  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee", marginRight: 8 },
+  filterChipActive: { backgroundColor: "#1A2E1A", borderColor: "#1A2E1A" },
+  filterChipText: { fontSize: 13, color: "#888", fontWeight: "600" },
+  filterChipTextActive: { color: "#fff" },
+  reportBarCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#eee", gap: 10 },
+  reportBarLabel: { fontSize: 13, color: "#1A2E1A", fontWeight: "500", marginBottom: 4 },
+  reportBarBg: { height: 8, backgroundColor: "#eee", borderRadius: 4, overflow: "hidden" },
+  reportBarFill: { height: 8, backgroundColor: "#1A2E1A", borderRadius: 4 },
+  reportBarValue: { fontSize: 13, fontWeight: "bold", color: "#C4622D", minWidth: 60, textAlign: "right" },
+  reportRank: { fontSize: 16, fontWeight: "bold", color: "#888", minWidth: 28 },
+  reportInfoCard: { backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#eee", flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  reportInfoLabel: { fontSize: 14, color: "#888" },
+  reportInfoValue: { fontSize: 14, fontWeight: "bold", color: "#1A2E1A" },
   productSearchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: "#eee" },
   productSearchInput: { flex: 1, fontSize: 14, color: "#1A2E1A" },
   productSearchClear: { fontSize: 16, color: "#888", paddingHorizontal: 8 },
@@ -1004,6 +1412,23 @@ const styles = StyleSheet.create({
   catDetailEmoji: { fontSize: 40 },
   catDetailTitle: { fontSize: 20, fontWeight: "bold", color: "#1A2E1A" },
   catDetailCount: { fontSize: 13, color: "#888", marginTop: 4 },
+  reportBtn: { flexDirection: "row", alignItems: "center", gap: 16, backgroundColor: "#FFF3CD", borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: "#eee" },
+  reportBtnEmoji: { fontSize: 36 },
+  reportBtnTitle: { fontSize: 16, fontWeight: "bold", color: "#856404" },
+  reportBtnSub: { fontSize: 12, color: "#888", marginTop: 2 },
+  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#fff", borderWidth: 1, borderColor: "#eee", marginRight: 8 },
+  filterChipActive: { backgroundColor: "#1A2E1A", borderColor: "#1A2E1A" },
+  filterChipText: { fontSize: 13, color: "#888", fontWeight: "600" },
+  filterChipTextActive: { color: "#fff" },
+  reportBarCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#eee", gap: 10 },
+  reportBarLabel: { fontSize: 13, color: "#1A2E1A", fontWeight: "500", marginBottom: 4 },
+  reportBarBg: { height: 8, backgroundColor: "#eee", borderRadius: 4, overflow: "hidden" },
+  reportBarFill: { height: 8, backgroundColor: "#1A2E1A", borderRadius: 4 },
+  reportBarValue: { fontSize: 13, fontWeight: "bold", color: "#C4622D", minWidth: 60, textAlign: "right" },
+  reportRank: { fontSize: 16, fontWeight: "bold", color: "#888", minWidth: 28 },
+  reportInfoCard: { backgroundColor: "#fff", borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: "#eee", flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  reportInfoLabel: { fontSize: 14, color: "#888" },
+  reportInfoValue: { fontSize: 14, fontWeight: "bold", color: "#1A2E1A" },
   productSearchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: "#eee" },
   productSearchInput: { flex: 1, fontSize: 14, color: "#1A2E1A" },
   productSearchClear: { fontSize: 16, color: "#888", paddingHorizontal: 8 },
@@ -1012,6 +1437,25 @@ const styles = StyleSheet.create({
   catDetailTitle: { fontSize: 20, fontWeight: "bold", color: "#1A2E1A" },
   catDetailCount: { fontSize: 13, color: "#888", marginTop: 4 },
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
